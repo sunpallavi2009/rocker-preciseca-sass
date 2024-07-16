@@ -53,10 +53,6 @@ Route::middleware([
     Route::get('/dashboard', [HomeController::class, 'index']);
     
     Route::resource('tenants', TenantController::class);
-    
-    // Route::get('tenants', [TenantController::class, 'show'])->name('tenants.show');
-
-    // Route::post('ckeditor/upload', [SettingsController::class, 'upload'])->name('ckeditor.upload');
 
     //  JET STREAM
     require __DIR__ . '/auth.php';

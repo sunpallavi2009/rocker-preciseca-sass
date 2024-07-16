@@ -1,17 +1,17 @@
 @extends("layouts.tenant")
-@section('title', __('Companies | Preciseca'))
+@section('title', __('Party Master | Preciseca'))
 @section("wrapper")
     <div class="page-wrapper">
     <div class="page-content">
         <!--breadcrumb-->
         <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
-            <div class="breadcrumb-title pe-3">Company</div>
+            <div class="breadcrumb-title pe-3">Party Master</div>
             <div class="ps-3">
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0 p-0">
                         <li class="breadcrumb-item"><a href="javascript:;"><i class="bx bx-home-alt"></i></a>
                         </li>
-                        <li class="breadcrumb-item active" aria-current="page">Companies</li>
+                        <li class="breadcrumb-item active" aria-current="page">Party Master</li>
                     </ol>
                 </nav>
             </div>
@@ -23,7 +23,7 @@
                 <div class="d-lg-flex align-items-center mb-4 gap-3">
                   <div class="ms-auto">
                     {{-- <a href="{{ route('tenants.create') }}" class="btn btn-primary radius-30 mt-2 mt-lg-0"><i class="bx bxs-plus-square"></i>Add New User</a> --}}
-                    <form action="{{ route('companies.fetchAndStore') }}" method="GET">
+                    <form action="{{ route('partymaster.fetchAndStore') }}" method="GET">
                         @csrf
                         <button type="submit" class="btn btn-secondary radius-30 mt-2 mt-lg-0"><i class="bx bx-download"></i> Fetch</button>
                     </form>

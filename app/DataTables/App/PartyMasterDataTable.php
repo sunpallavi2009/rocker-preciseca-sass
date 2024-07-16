@@ -3,12 +3,12 @@
 namespace App\DataTables\App;
 
 use Carbon\Carbon;
-use App\Models\Item;
+use App\Models\PartyMaster;
 use App\Facades\UtilityFacades;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Services\DataTable;
 
-class ItemDataTable extends DataTable
+class PartyMasterDataTable extends DataTable
 {
 
     public function dataTable($query)
@@ -35,7 +35,7 @@ class ItemDataTable extends DataTable
             });
     }
 
-    public function query(Item $model)
+    public function query(PartyMaster $model)
     {
         return $model->newQuery();
     }
@@ -43,7 +43,7 @@ class ItemDataTable extends DataTable
     public function html()
     {
         return $this->builder()
-            ->setTableId('item-table')
+            ->setTableId('party-master-table')
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(1)

@@ -29,15 +29,18 @@
                   <div class="menu-title d-flex align-items-center">Apps & Pages</div>
                   <div class="ms-auto dropy-icon"><i class='bx bx-chevron-down'></i></div>
               </a>
-              {{-- <ul class="dropdown-menu">
-                <li class="nav-item dropend">
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{{ route('companies.index') }}"><i class='bx bx-bar-chart-alt-2' ></i>Company</a></li>
+                <li><a class="dropdown-item" href="{{ route('partymaster.index') }}"><i class='bx bx-bar-chart-alt-2' ></i>Party Master</a></li>
+                <li><a class="dropdown-item" href="{{ route('items.index') }}"><i class='bx bx-bar-chart-alt-2' ></i>Item</a></li>
+                {{-- <li class="nav-item dropend">
                   <a class="dropdown-item dropdown-toggle dropdown-toggle-nocaret" href="javascript:;"><i class='bx bx-file'></i>Tenants</a>
                   <ul class="dropdown-menu submenu">
                       <li><a class="dropdown-item" href="{{ route('tenants.create') }}"><i class='bx bx-radio-circle'></i>Create Tenant</a></li>
-                      <li><a class="dropdown-item" href="{{ route('tenants.index') }}"><i class='bx bx-radio-circle'></i>Tenant list</a></li>
+                      <li><a class="dropdown-item" href="{{ route('company.index') }}"><i class='bx bx-radio-circle'></i>Tenant list</a></li>
                     </ul>
-                </li>
-              </ul> --}}
+                </li> --}}
+              </ul>
             </li>
             
             <li class="nav-item dropdown d-none">

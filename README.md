@@ -10,8 +10,15 @@
 * Make Test Domain Like `central.test` 
 * Change `APP_URL` to `http://central.test`in `.env`
 * Run `php artisan db:Seed --class=TenantSeeder`
+* composer require stancl/tenancy:^3.6
+* php artisan tenancy:install
+* also setup route
+
 
 in cpanal tenant workable steps 
+config->app.php
+config->tenancy.php
+
 2}=DPm=P23t}
 
 User: irriion

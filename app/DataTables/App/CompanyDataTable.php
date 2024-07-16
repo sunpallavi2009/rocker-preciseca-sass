@@ -3,53 +3,13 @@
 namespace App\DataTables\App;
 
 use Carbon\Carbon;
-use App\Models\Company;
+use App\Models\TallyCompany;
 use App\Facades\UtilityFacades;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Services\DataTable;
 
 class CompanyDataTable extends DataTable
 {
-    protected $states = [
-        'JAMMU AND KASHMIR' => '01',
-        'HIMACHAL PRADESH' => '02',
-        'PUNJAB' => '03',
-        'CHANDIGARH' => '04',
-        'UTTARAKHAND' => '05',
-        'HARYANA' => '06',
-        'DELHI' => '07',
-        'RAJASTHAN' => '08',
-        'UTTAR PRADESH' => '09',
-        'BIHAR' => '10',
-        'SIKKIM' => '11',
-        'ARUNACHAL PRADESH' => '12',
-        'NAGALAND' => '13',
-        'MANIPUR' => '14',
-        'MIZORAM' => '15',
-        'TRIPURA' => '16',
-        'MEGHALAYA' => '17',
-        'ASSAM' => '18',
-        'WEST BENGAL' => '19',
-        'JHARKHAND' => '20',
-        'ODISHA' => '21',
-        'CHATTISGARH' => '22',
-        'MADHYA PRADESH' => '23',
-        'GUJARAT' => '24',
-        'DADRA AND NAGAR HAVELI AND DAMAN AND DIU (NEWLY MERGED UT)' => '26',
-        'MAHARASHTRA' => '27',
-        'ANDHRA PRADESH(BEFORE DIVISION)' => '28',
-        'KARNATAKA' => '29',
-        'GOA' => '30',
-        'LAKSHADWEEP' => '31',
-        'KERALA' => '32',
-        'TAMIL NADU' => '33',
-        'PUDUCHERRY' => '34',
-        'ANDAMAN AND NICOBAR ISLANDS' => '35',
-        'TELANGANA' => '36',
-        'ANDHRA PRADESH (NEWLY ADDED)' => '37',
-        'OTHER TERRITORY' => '97',
-        'CENTRE JURISDICTION' => '99',
-    ];
 
     public function dataTable($query)
     {
@@ -59,17 +19,23 @@ class CompanyDataTable extends DataTable
             ->editColumn('created_at', function ($request) {
                 return Carbon::parse($request->created_at)->format('Y-m-d H:i:s');
             })
-            ->addColumn('action', function (Company $companies) {
-                return view('app.company._action', compact('companies'));
-            })
-            ->addColumn('state', function (Company $companies) {
-                return array_search($companies->state, $this->states);
-            })
+            ->editColumn('data', function ($request) {
+                // Decode JSON data
+                $data = json_decode($request->data, true);
 
-            ->rawColumns(['action','state']);
+                // Check if decoding was successful and if data is an array
+                if (is_array($data)) {
+                    // Extract values and join them with a comma or any separator you prefer
+                    $formattedData = implode(', ', $data);
+                } else {
+                    $formattedData = 'N/A'; // Default value if JSON is not valid or empty
+                }
+
+                return $formattedData;
+            });
     }
 
-    public function query(Company $model)
+    public function query(TallyCompany $model)
     {
         return $model->newQuery();
     }
@@ -83,29 +49,28 @@ class CompanyDataTable extends DataTable
             ->orderBy(1)
             ->language([
                 "paginate" => [
-                    "next" => '<i class="ti ti-chevron-right"></i>',
-                    "previous" => '<i class="ti ti-chevron-left"></i>'
+                    "next" => '<i class="ti ti-chevron-right"></i>next',
+                    "previous" => '<i class="ti ti-chevron-left"></i>Prev'
                 ],
-                'lengthMenu' => __('_MENU_ entries per page'),
+                'lengthMenu' => __('Show _MENU_ entries'),
                 "searchPlaceholder" => __('Search...'), "search" => ""
             ])
             ->initComplete('function() {
                 var table = this;
                 var searchInput = $(\'#\'+table.api().table().container().id+\' label input[type="search"]\');
-                searchInput.removeClass(\'form-control form-control-sm\');
-                searchInput.addClass(\'dataTable-input\');
-                var select = $(table.api().table().container()).find(".dataTables_length select").removeClass(\'custom-select custom-select-sm form-control form-control-sm\').addClass(\'dataTable-selector\');
+                searchInput.removeClass(\'form-control form-control-sm\').addClass(\'form-control ps-5 radius-30\').attr(\'placeholder\', \'Search Order\');
+                searchInput.wrap(\'<div class="position-relative pt-1"></div>\');
+                searchInput.parent().append(\'<span class="position-absolute top-50 product-show translate-middle-y"><i class="bx bx-search"></i></span>\');
+                
+                var select = $(table.api().table().container()).find(".dataTables_length select").removeClass(\'custom-select custom-select-sm form-control form-control-sm\').addClass(\'form-select form-select-sm\');
             }')
             ->parameters([
                 "dom" =>  "
-                               <'dataTable-top row'<'dataTable-dropdown page-dropdown col-lg-2 col-sm-12'l><'dataTable-botton table-btn col-lg-6 col-sm-12'B><'dataTable-search tb-search col-lg-3 col-sm-12'f>>
+                               <'dataTable-top row'<'dataTable-dropdown page-dropdown col-lg-3 col-sm-12'l><'dataTable-botton table-btn col-lg-6 col-sm-12'B><'dataTable-search tb-search col-lg-3 col-sm-12'f>>
                              <'dataTable-container'<'col-sm-12'tr>>
                              <'dataTable-bottom row'<'col-sm-5'i><'col-sm-7'p>>
                                ",
                 'buttons'   => [
-                    ['extend' => 'create', 'className' => 'btn btn-light-primary no-corner me-1 add_module', 'action' => " function ( e, dt, node, config ) {
-                        window.location = '" . route('companies.create') . "';
-                   }"],
                 ],
                 "scrollX" => true,
                 "drawCallback" => 'function( settings ) {
@@ -119,7 +84,7 @@ class CompanyDataTable extends DataTable
                         document.querySelectorAll("[data-bs-toggle=popover]")
                       );
                       var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
-                        return new bootstrap.Popover(popoverTriggerEl);
+                        return new bootstrap.Popover(tooltipTriggerEl);
                       });
                       var toastElList = [].slice.call(document.querySelectorAll(".toast"));
                       var toastList = toastElList.map(function (toastEl) {
@@ -144,18 +109,10 @@ class CompanyDataTable extends DataTable
         return [
             Column::make('No')->data('DT_RowIndex')->name('DT_RowIndex')->searchable(false)->orderable(false),
 //            Column::make('name')->title(__('User Name')),
-            Column::make('company_name')->title(__('Company Name')),
-            Column::make('gst_no')->title(__('GST Number')),
-            Column::make('state')->title(__('State')),
-            Column::make('gst_user_name')->title(__('GST User Name')),
-            Column::make('tally_company_guid')->title(__('Tally Id')),
-            Column::make('token_id')->title(__('Token Id')),
-            Column::computed('action')->title(__('Action'))
-                ->exportable(false)
-                ->printable(false)
-                ->width(60)
-                ->addClass('text-center')
-                ->width('20%'),
+            Column::make('data')->title(__('Company Name'))
+            ->addClass('text-center'),
+            Column::make('created_at')->title(__('Created At')),
+            Column::make('updated_at')->title(__('Updated At')),
         ];
     }
 

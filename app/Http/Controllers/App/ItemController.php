@@ -5,26 +5,26 @@ namespace App\Http\Controllers\App;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
-use App\Models\TallyCompany;
+use App\Models\Item;
 use Illuminate\Support\Facades\Auth;
-use App\DataTables\App\CompanyDataTable;
+use App\DataTables\App\ItemDataTable;
 use Illuminate\Support\Facades\Log; 
 
-class CompanyController extends Controller
+class ItemController extends Controller
 {
-
-    public function index(CompanyDataTable $dataTable)
+    
+    public function index(ItemDataTable $dataTable)
     {
-        return $dataTable->render('app.company.index');
+        return $dataTable->render('app.item.index');
     }
 
     public function fetchAndStore()
     {
         try {
-            $response = Http::get('http://localhost:8080/company');
+            $response = Http::get('http://localhost:8080/hsn');
 
             Log::info('API Request', [
-                'url' => 'http://localhost:8080/company',
+                'url' => 'http://localhost:8080/hsn',
                 'response' => $response->body(),
                 'status' => $response->status(),
             ]);
@@ -38,7 +38,7 @@ class CompanyController extends Controller
                 Log::info('Fetched Data', ['data' => $data]);
 
                 if (!empty($data)) {
-                    TallyCompany::create([
+                    Item::create([
                         'data' => json_encode($data)
                     ]);
 
