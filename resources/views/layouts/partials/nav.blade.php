@@ -37,6 +37,7 @@
                       <li><a class="dropdown-item" href="{{ route('tenants.index') }}"><i class='bx bx-radio-circle'></i>Tenant list</a></li>
                     </ul>
                 </li>
+                <li><a class="dropdown-item" href="{{ route('tally.index') }}"><i class='bx bx-bar-chart-alt-2' ></i>Tally list</a></li>
               </ul>
             </li>
             

@@ -4,6 +4,7 @@ use Laravel\Jetstream\Jetstream;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\TenantController;
+use App\Http\Controllers\SuperAdmin\TallyController;
 use Laravel\Jetstream\Http\Controllers\CurrentTeamController;
 use Laravel\Jetstream\Http\Controllers\Inertia\TeamController;
 use Laravel\Jetstream\Http\Controllers\TeamInvitationController;
@@ -53,6 +54,11 @@ Route::middleware([
     Route::get('/dashboard', [HomeController::class, 'index']);
     
     Route::resource('tenants', TenantController::class);
+
+    Route::resource('tally', TallyController::class);
+
+    Route::get('/tally/data', [TallyController::class, 'groupData'])->name('group.data');
+
 
     //  JET STREAM
     require __DIR__ . '/auth.php';
