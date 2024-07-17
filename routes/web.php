@@ -56,8 +56,10 @@ Route::middleware([
     Route::resource('tenants', TenantController::class);
 
     Route::resource('tally', TallyController::class);
+    
+    Route::get('jsonImport/ledger/show', [TallyController::class,'ledgerShow'])->name('jsonImport.ledger.show');
 
-    Route::get('/tally/data', [TallyController::class, 'groupData'])->name('group.data');
+    Route::get('jsonImport/otherLedger/show', [TallyController::class,'otherLedgerShow'])->name('jsonImport.otherledger.show');
 
 
     //  JET STREAM

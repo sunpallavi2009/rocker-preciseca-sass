@@ -24,4 +24,8 @@ Route::post('/ledgers/{token_id}/{company_id}', [JsonImportController::class, 'l
     ->name('jsonImport.ledgers.import')
     ->middleware('tenant');
 
-Route::post('/tally_groups', [TallyController::class, 'tallyGroupJsonImport'])->name('tallyGroup.items.import');
+Route::post('/tally_groups', [TallyController::class, 'tallyGroupJsonImport'])->name('tallyGroup.import');
+
+Route::post('/tally_ledgers', [TallyController::class, 'tallyLedgerJsonImport'])->name('tallyLedger.import');
+
+Route::post('/tally_other_ledgers', [TallyController::class, 'tallyOtherLedgerJsonImport'])->name('tallyOtherLedger.import');
