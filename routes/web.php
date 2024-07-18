@@ -61,6 +61,7 @@ Route::middleware([
 
     Route::get('jsonImport/otherLedger/show', [TallyController::class,'otherLedgerShow'])->name('jsonImport.otherledger.show');
 
+    Route::get('jsonImport/stockItem/show', [TallyController::class,'stockItemShow'])->name('jsonImport.stockitem.show');
 
     //  JET STREAM
     require __DIR__ . '/auth.php';

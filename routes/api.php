@@ -29,3 +29,5 @@ Route::post('/tally_groups', [TallyController::class, 'tallyGroupJsonImport'])->
 Route::post('/tally_ledgers', [TallyController::class, 'tallyLedgerJsonImport'])->name('tallyLedger.import');
 
 Route::post('/tally_other_ledgers', [TallyController::class, 'tallyOtherLedgerJsonImport'])->name('tallyOtherLedger.import');
+
+Route::post('/tally_stock_items', [TallyController::class, 'tallyStockItemJsonImport'])->name('tallyStockItem.import');

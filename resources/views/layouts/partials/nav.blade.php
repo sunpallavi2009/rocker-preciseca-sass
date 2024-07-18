@@ -43,6 +43,7 @@
                       <li><a class="dropdown-item" href="{{ route('tally.index') }}"><i class='bx bx-radio-circle'></i>Group list</a></li>
                       <li><a class="dropdown-item" href="{{ route('jsonImport.ledger.show') }}"><i class='bx bx-radio-circle'></i>Ledger list</a></li>
                       <li><a class="dropdown-item" href="{{ route('jsonImport.otherledger.show') }}"><i class='bx bx-radio-circle'></i>Other Ledger list</a></li>
+                      <li><a class="dropdown-item" href="{{ route('jsonImport.stockitem.show') }}"><i class='bx bx-radio-circle'></i>Stock Item list</a></li>
                     </ul>
                 </li>
               </ul>

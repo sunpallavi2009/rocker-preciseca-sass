@@ -9,10 +9,12 @@ use Illuminate\Http\Request;
 use App\Models\TallyGroup;
 use App\Models\TallyLedger;
 use App\Models\TallyOtherLedger;
+use App\Models\TallyStockItem;
 use Illuminate\Support\Facades\Auth;
 use App\DataTables\TallyGroupDataTable;
 use App\DataTables\TallyLedgerDataTable;
 use App\DataTables\TallyOtherLedgerDataTable;
+use App\DataTables\TallyStockItemDataTable;
 use Illuminate\Support\Facades\Log; 
 
 class TallyController extends Controller
@@ -104,25 +106,25 @@ class TallyController extends Controller
             $ledgerData = $tallyMessage['LEDGER'];
 
             // Extract specific fields
-            $guid = $ledgerData['GUID'] ?? null;
-            $currencyName = $ledgerData['CURRENCYNAME'] ?? null;
-            $priorStateName = $ledgerData['PRIORSTATENAME'] ?? null;
-            $incomeTaxNumber = $ledgerData['INCOMETAXNUMBER'] ?? null;
-            $parent = $ledgerData['PARENT'] ?? null;
-            $tcsApplicable = $ledgerData['TCSAPPLICABLE'] ?? null;
-            $taxClassificationName = html_entity_decode($ledgerData['TAXCLASSIFICATIONNAME'] ?? null);
-            $taxType = $ledgerData['TAXTYPE'] ?? null;
-            $countryOfResidence = $ledgerData['COUNTRYOFRESIDENCE'] ?? null;
-            $ledgerCountryIsdCode = $ledgerData['LEDGERCOUNTRYISDCODE'] ?? null;
-            $gstType = html_entity_decode($ledgerData['GSTTYPE'] ?? null);
-            $appropriateFor = html_entity_decode($ledgerData['APPROPRIATEFOR'] ?? null);
-            $gstNatureOfSupply = html_entity_decode($ledgerData['GSTNATUREOFSUPPLY'] ?? null);
-            $serviceCategory = html_entity_decode($ledgerData['SERVICECATEGORY'] ?? null);
-            $partyBusinessStyle = $ledgerData['PARTYBUSINESSSTYLE'] ?? null;
-            $isBillWiseOn = $ledgerData['ISBILLWISEON'] ?? null;
-            $isCostCentresOn = $ledgerData['ISCOSTCENTRESON'] ?? null;
-            $alterId = $ledgerData['ALTERID'] ?? null;
-            $openingBalance = $ledgerData['OPENINGBALANCE'] ?? null;
+            // $guid = $ledgerData['GUID'] ?? null;
+            // $currencyName = $ledgerData['CURRENCYNAME'] ?? null;
+            // $priorStateName = $ledgerData['PRIORSTATENAME'] ?? null;
+            // $incomeTaxNumber = $ledgerData['INCOMETAXNUMBER'] ?? null;
+            // $parent = $ledgerData['PARENT'] ?? null;
+            // $tcsApplicable = $ledgerData['TCSAPPLICABLE'] ?? null;
+            // $taxClassificationName = html_entity_decode($ledgerData['TAXCLASSIFICATIONNAME'] ?? null);
+            // $taxType = $ledgerData['TAXTYPE'] ?? null;
+            // $countryOfResidence = $ledgerData['COUNTRYOFRESIDENCE'] ?? null;
+            // $ledgerCountryIsdCode = $ledgerData['LEDGERCOUNTRYISDCODE'] ?? null;
+            // $gstType = html_entity_decode($ledgerData['GSTTYPE'] ?? null);
+            // $appropriateFor = html_entity_decode($ledgerData['APPROPRIATEFOR'] ?? null);
+            // $gstNatureOfSupply = html_entity_decode($ledgerData['GSTNATUREOFSUPPLY'] ?? null);
+            // $serviceCategory = html_entity_decode($ledgerData['SERVICECATEGORY'] ?? null);
+            // $partyBusinessStyle = $ledgerData['PARTYBUSINESSSTYLE'] ?? null;
+            // $isBillWiseOn = $ledgerData['ISBILLWISEON'] ?? null;
+            // $isCostCentresOn = $ledgerData['ISCOSTCENTRESON'] ?? null;
+            // $alterId = $ledgerData['ALTERID'] ?? null;
+            // $openingBalance = $ledgerData['OPENINGBALANCE'] ?? null;
 
             // Handle GSTDETAILS
             $gstDetails = $ledgerData['GSTDETAILS.LIST'] ?? null;
@@ -130,8 +132,8 @@ class TallyController extends Controller
             // Add more handling as per your requirements for GSTDETAILS
 
             // Handle LANGUAGE and NAME.LIST
-            $languageName = $ledgerData['LANGUAGENAME.LIST']['NAME.LIST']['NAME'] ?? null;
-            $languageId = $ledgerData['LANGUAGENAME.LIST']['LANGUAGEID'] ?? null;
+            // $languageName = $ledgerData['LANGUAGENAME.LIST']['NAME.LIST']['NAME'] ?? null;
+            // $languageId = $ledgerData['LANGUAGENAME.LIST']['LANGUAGEID'] ?? null;
 
             // Handle LEDMAILINGDETAILS
             $mailingName = $ledgerData['LEDMAILINGDETAILS.LIST']['MAILINGNAME'] ?? null;
@@ -164,27 +166,27 @@ class TallyController extends Controller
 
             // Create TallyLedger record
             $tallyLedger = TallyLedger::create([
-                'guid' => $guid,
-                'currency_name' => $currencyName,
-                'prior_state_name' => $priorStateName,
-                'income_tax_number' => $incomeTaxNumber,
-                'parent' => $parent,
-                'tcs_applicable' => $tcsApplicable,
-                'tax_classification_name' => $taxClassificationName,
-                'tax_type' => $taxType,
-                'country_of_residence' => $countryOfResidence,
-                'ledger_country_isd_code' => $ledgerCountryIsdCode,
-                'gst_type' => $gstType,
-                'appropriate_for' => $appropriateFor,
-                'gst_nature_of_supply' => $gstNatureOfSupply,
-                'service_category' => $serviceCategory,
-                'party_business_style' => $partyBusinessStyle,
-                'is_bill_wise_on' => $isBillWiseOn,
-                'is_cost_centres_on' => $isCostCentresOn,
-                'alter_id' => $alterId,
-                'opening_balance' => $openingBalance,
-                'language_name' => $languageName,
-                'language_id' => $languageId,
+                'guid' => $ledgerData['GUID'] ?? null,
+                'currency_name' => $ledgerData['CURRENCYNAME'] ?? null,
+                'prior_state_name' => $ledgerData['PRIORSTATENAME'] ?? null,
+                'income_tax_number' => $ledgerData['INCOMETAXNUMBER'] ?? null,
+                'parent' => $ledgerData['PARENT'] ?? null,
+                'tcs_applicable' => $ledgerData['TCSAPPLICABLE'] ?? null,
+                'tax_classification_name' => html_entity_decode($ledgerData['TAXCLASSIFICATIONNAME'] ?? null),
+                'tax_type' => $ledgerData['TAXTYPE'] ?? null,
+                'country_of_residence' => $ledgerData['COUNTRYOFRESIDENCE'] ?? null,
+                'ledger_country_isd_code' => $ledgerData['LEDGERCOUNTRYISDCODE'] ?? null,
+                'gst_type' => html_entity_decode($ledgerData['GSTTYPE'] ?? null),
+                'appropriate_for' => html_entity_decode($ledgerData['APPROPRIATEFOR'] ?? null),
+                'gst_nature_of_supply' => html_entity_decode($ledgerData['GSTNATUREOFSUPPLY'] ?? null),
+                'service_category' => html_entity_decode($ledgerData['SERVICECATEGORY'] ?? null),
+                'party_business_style' => $ledgerData['PARTYBUSINESSSTYLE'] ?? null,
+                'is_bill_wise_on' => $ledgerData['ISBILLWISEON'] ?? null,
+                'is_cost_centres_on' => $ledgerData['ISCOSTCENTRESON'] ?? null,
+                'alter_id' => $ledgerData['ALTERID'] ?? null,
+                'opening_balance' => $ledgerData['OPENINGBALANCE'] ?? null,
+                'language_name' => $ledgerData['LANGUAGENAME.LIST']['NAME.LIST']['NAME'] ?? null,
+                'language_id' => $ledgerData['LANGUAGENAME.LIST']['LANGUAGEID'] ?? null,
                 'applicable_from' => $applicableFrom,
                 'mailing_name' => $mailingName,
                 'address' => $address,
@@ -315,6 +317,75 @@ class TallyController extends Controller
     public function otherLedgerShow(TallyOtherLedgerDataTable $dataTable)
     {
         return $dataTable->render('superadmin.tallydata.otherLedger');
+    }
+
+    public function tallyStockItemJsonImport(Request $request)
+    {
+        try {
+            $jsonData = $request->getContent();
+            $fileName = 'tally_stock_items_data_' . date('YmdHis') . '.json';
+
+            $jsonFilePath = storage_path('app/' . $fileName);
+            file_put_contents($jsonFilePath, $jsonData);
+
+            $jsonData = file_get_contents($jsonFilePath);
+            $data = json_decode($jsonData, true);
+
+            if (!isset($data['TALLYMESSAGE']['STOCKITEM'])) {
+                throw new \Exception('Invalid JSON structure.');
+            }
+
+            $stockItemData = $data['TALLYMESSAGE']['STOCKITEM'];
+
+            // Handle the name field correctly
+            $nameField = $stockItemData['LANGUAGENAME.LIST']['NAME.LIST']['NAME'] ?? null;
+            if (is_array($nameField)) {
+                $nameField = implode(', ', $nameField);
+            }
+
+            $tallyStockItem = TallyStockItem::create([
+                'guid' => $stockItemData['GUID'] ?? null,
+                'parent' => $stockItemData['PARENT'] ?? null,
+                'category' => html_entity_decode($stockItemData['CATEGORY'] ?? null),
+                'gst_applicable' => html_entity_decode($stockItemData['GSTAPPLICABLE'] ?? null),
+                'tax_classification_name' => html_entity_decode($stockItemData['TAXCLASSIFICATIONNAME'] ?? null),
+                'gst_type_of_supply' => $stockItemData['GSTTYPEOFSUPPLY'] ?? null,
+                'excise_applicability' => html_entity_decode($stockItemData['EXCISEAPPLICABILITY'] ?? null),
+                'vat_applicable' => html_entity_decode($stockItemData['VATAPPLICABLE'] ?? null),
+                'costing_method' => $stockItemData['COSTINGMETHOD'] ?? null,
+                'valuation_method' => $stockItemData['VALUATIONMETHOD'] ?? null,
+                'base_units' => $stockItemData['BASEUNITS'] ?? null,
+                'additional_units' => html_entity_decode($stockItemData['ADDITIONALUNITS'] ?? null),
+                'excise_item_classification' => html_entity_decode($stockItemData['EXCISEITEMCLASSIFICATION'] ?? null),
+                'vat_base_unit' => $stockItemData['VATBASEUNIT'] ?? null,
+                'is_cost_centres_on' => $stockItemData['ISCOSTCENTRESON'] ?? null,
+                'is_batch_wise_on' => $stockItemData['ISBATCHWISEON'] ?? null,
+                'alter_id' => $stockItemData['ALTERID'] ?? null,
+                'opening_balance' => $stockItemData['OPENINGBALANCE'] ?? null,
+                'opening_value' => $stockItemData['OPENINGVALUE'] ?? null,
+                'opening_rate' => $stockItemData['OPENINGRATE'] ?? null,
+                'gst_details' => $stockItemData['GSTDETAILS.LIST'] ?? null,
+                'hsn_details' => $stockItemData['HSNDETAILS.LIST'] ?? null,
+                'language_name' => $nameField,
+                'language_id' => $stockItemData['LANGUAGENAME.LIST']['LANGUAGEID'] ?? null,
+                'batch_allocations' => $stockItemData['BATCHALLOCATIONS.LIST'] ?? null,
+            ]);
+
+            if (!$tallyStockItem) {
+                throw new \Exception('Failed to create tally stock item record.');
+            }
+
+            return response()->json(['message' => 'Tally stock item data saved successfully.']);
+
+        } catch (\Exception $e) {
+            Log::error('Error importing data: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function stockItemShow(TallyStockItemDataTable $dataTable)
+    {
+        return $dataTable->render('superadmin.tallydata.stockItem');
     }
     
 }
