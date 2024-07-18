@@ -218,13 +218,6 @@ class TallyController extends Controller
     }
 
     
-    
-    
-    
-
-
-
-
     public function ledgerShow(TallyLedgerDataTable $dataTable)
     {
         return $dataTable->render('superadmin.tallydata.ledger');
