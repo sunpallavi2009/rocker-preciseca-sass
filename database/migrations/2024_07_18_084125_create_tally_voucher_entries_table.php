@@ -13,11 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('tally_companies', function (Blueprint $table) {
+        Schema::create('tally_voucher_entries', function (Blueprint $table) {
             $table->id();
-            $table->string('guid')->unique();
-            $table->string('name')->nullable();
-            $table->string('state')->nullable();
+            $table->unsignedBigInteger('tally_voucher_id')->nullable();
+            $table->foreign('tally_voucher_id')->references('id')->on('tally_vouchers')->onDelete('cascade');
+            $table->string('ledger_name')->nullable();
+            $table->string('amount')->nullable();
             $table->timestamps();
         });
     }
@@ -29,6 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('tally_companies');
+        Schema::dropIfExists('tally_voucher_entries');
     }
 };

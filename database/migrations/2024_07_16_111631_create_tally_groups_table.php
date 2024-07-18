@@ -16,10 +16,10 @@ return new class extends Migration
         Schema::create('tally_groups', function (Blueprint $table) {
             $table->id();
             $table->string('guid')->unique();
+            $table->string('company_guid')->nullable();
+            $table->foreign('company_guid')->references('guid')->on('tally_companies')->onDelete('cascade');
             $table->string('name')->nullable();
             $table->string('parent')->nullable();
-            $table->string('grp_debit_parent')->nullable();
-            $table->string('grp_credit_parent')->nullable();
             $table->string('affects_stock')->nullable();
             $table->string('alter_id')->nullable();
             $table->timestamps();

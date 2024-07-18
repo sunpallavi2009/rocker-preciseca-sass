@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('tally_ledgers', function (Blueprint $table) {
             $table->id();
             $table->string('guid')->unique();
+            $table->string('company_guid')->nullable();
             $table->string('currency_name')->nullable();
             $table->string('prior_state_name')->nullable();
             $table->string('income_tax_number')->nullable();
