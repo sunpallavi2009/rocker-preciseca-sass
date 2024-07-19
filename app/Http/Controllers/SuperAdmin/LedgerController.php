@@ -35,29 +35,29 @@ class LedgerController extends Controller
             $messages = $data['ENVELOPE']['BODY']['IMPORTDATA']['REQUESTDATA']['TALLYMESSAGE'];
 
             // Track company GUIDs to ensure they are inserted only once
-            $companyGuids = TallyCompany::pluck('guid')->toArray();
-            Log::info('Company GUIDs in Database:', ['companyGuids' => $companyGuids]);
+            // $companyGuids = TallyCompany::pluck('guid')->toArray();
+            // Log::info('Company GUIDs in Database:', ['companyGuids' => $companyGuids]);
 
-            foreach ($messages as $message) {
-                if (isset($message['COMPANY'])) {
-                    $companyData = $message['COMPANY']['REMOTECMPINFO.LIST'];
-                    $companyGuid = $companyData['NAME'];
+            // foreach ($messages as $message) {
+            //     if (isset($message['COMPANY'])) {
+            //         $companyData = $message['COMPANY']['REMOTECMPINFO.LIST'];
+            //         $companyGuid = $companyData['NAME'];
 
-                    if (!in_array($companyGuid, $companyGuids)) {
-                        $company = TallyCompany::create([
-                            'guid' => $companyGuid,
-                            'name' => $companyData['REMOTECMPNAME'] ?? null,
-                            'state' => $companyData['REMOTECMPSTATE'] ?? null,
-                        ]);
+            //         if (!in_array($companyGuid, $companyGuids)) {
+            //             $company = TallyCompany::create([
+            //                 'guid' => $companyGuid,
+            //                 'name' => $companyData['REMOTECMPNAME'] ?? null,
+            //                 'state' => $companyData['REMOTECMPSTATE'] ?? null,
+            //             ]);
 
-                        if (!$company) {
-                            throw new \Exception('Failed to create tally company record.');
-                        }
+            //             if (!$company) {
+            //                 throw new \Exception('Failed to create tally company record.');
+            //             }
 
-                        $companyGuids[] = $companyGuid;
-                    }
-                }
-            }
+            //             $companyGuids[] = $companyGuid;
+            //         }
+            //     }
+            // }
 
             foreach ($messages as $message) {
                 if (isset($message['GROUP'])) {
