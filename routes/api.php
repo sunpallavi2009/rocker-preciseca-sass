@@ -29,6 +29,8 @@ Route::post('/ledgers/{token_id}/{company_id}', [JsonImportController::class, 'l
     
 Route::post('/master', [LedgerController::class, 'masterJsonImport'])->name('master.import');
 
+Route::post('/stock_item', [LedgerController::class, 'stockItemJsonImport'])->name('stockItem.import');
+
 Route::post('/tally_groups', [TallyController::class, 'tallyGroupJsonImport'])->name('tallyGroup.import');
 
 Route::post('/tally_ledgers', [TallyController::class, 'tallyLedgerJsonImport'])->name('tallyLedger.import');
