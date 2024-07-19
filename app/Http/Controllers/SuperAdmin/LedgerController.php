@@ -95,7 +95,6 @@ class LedgerController extends Controller
                     $ledgerData = $message['LEDGER'];
                     Log::info('Ledger Data:', ['ledgerData' => $ledgerData]);
 
-                    if ($ledgerData['PARENT'] === 'Sundry Debtors' || $ledgerData['PARENT'] === 'Sundry Creditors') {
                         $nameField = $ledgerData['LANGUAGENAME.LIST']['NAME.LIST']['NAME'] ?? null;
                         if (is_array($nameField)) {
                             $nameField = implode(', ', $nameField);
@@ -155,9 +154,6 @@ class LedgerController extends Controller
                         if (!$tallyLedger) {
                             throw new \Exception('Failed to create or update tally ledger record.');
                         }
-                    } else {
-                        Log::info('Skipping Ledger with PARENT:', ['parent' => $ledgerData['PARENT']]);
-                    }
                 }
             }
 
