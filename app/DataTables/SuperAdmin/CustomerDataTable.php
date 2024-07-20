@@ -1,14 +1,14 @@
 <?php
 
-namespace App\DataTables\App;
+namespace App\DataTables\SuperAdmin;
 
 use Carbon\Carbon;
-use App\Models\TallyCompany;
+use App\Models\TallyLedger;
 use App\Facades\UtilityFacades;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Services\DataTable;
 
-class CompanyDataTable extends DataTable
+class CustomerDataTable extends DataTable
 {
 
     public function dataTable($query)
@@ -18,32 +18,18 @@ class CompanyDataTable extends DataTable
             ->addIndexColumn()
             ->editColumn('created_at', function ($request) {
                 return Carbon::parse($request->created_at)->format('Y-m-d H:i:s');
-            })
-            ->editColumn('data', function ($request) {
-                // Decode JSON data
-                $data = json_decode($request->data, true);
-
-                // Check if decoding was successful and if data is an array
-                if (is_array($data)) {
-                    // Extract values and join them with a comma or any separator you prefer
-                    $formattedData = implode(', ', $data);
-                } else {
-                    $formattedData = 'N/A'; // Default value if JSON is not valid or empty
-                }
-
-                return $formattedData;
             });
     }
 
-    public function query(TallyCompany $model)
+    public function query(TallyLedger $model)
     {
-        return $model->newQuery();
+        return $model->newQuery()->where('parent', 'Sundry Debtors');
     }
 
     public function html()
     {
         return $this->builder()
-            ->setTableId('company-table')
+            ->setTableId('customer-table')
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(1)
@@ -108,11 +94,9 @@ class CompanyDataTable extends DataTable
     {
         return [
             Column::make('No')->data('DT_RowIndex')->name('DT_RowIndex')->searchable(false)->orderable(false),
-//            Column::make('name')->title(__('User Name')),
-            Column::make('data')->title(__('Company Name'))
-            ->addClass('text-center'),
-            Column::make('created_at')->title(__('Created At')),
-            Column::make('updated_at')->title(__('Updated At')),
+            // Column::make('guid')->title(__('Guid')),
+            Column::make('language_name')->title(__('Name')),
+            Column::make('parent')->title(__('Group')),
         ];
     }
 

@@ -4,55 +4,6 @@
             {{-- <x-jet-authentication-card-logo /> --}}
         </x-slot>
 
-
-
-
-{{-- 
-        <form method="POST" action="{{ route('login') }}">
-            @csrf
-
-            <div>
-                <x-jet-label for="email" value="{{ __('Email Address') }}" />
-                <x-jet-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus placeholder="Enter Email Address"/>
-            </div>
-
-            <div class="mt-4">
-                <div class="flex justify-between items-center">
-                    <x-jet-label for="password" value="{{ __('Enter Password') }}" />
-                    @if (Route::has('password.request'))
-                        <a class="underline text-sm text-gray-600 hover:text-gray-900" href="{{ route('password.request') }}">
-                            {{ __('Forgot password?') }}
-                        </a>
-                    @endif
-                </div>
-                <x-jet-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="current-password" placeholder="Enter password"/>
-            </div>
-
-            <div class="block mt-4">
-                <label for="remember_me" class="flex items-center">
-                    <x-jet-checkbox id="remember_me" name="remember" />
-                    <span class="ml-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
-                </label>
-            </div>
-
-           
-
-            <div class="flex items-center justify-end mt-4">
-
-                @if (Route::has('register'))
-                    <a class="underline text-sm text-gray-600 hover:text-gray-900" href="{{ route('register') }}">
-                        Don't have an account ? {{ __('Register here') }}
-                    </a>
-                @endif
-
-                <x-jet-button class="ml-4">
-                    {{ __('Log in') }}
-                </x-jet-button>
-
-            </div>
-        </form> --}}
-
-
         <div class="wrapper">
             <div class="section-authentication-signin d-flex align-items-center justify-content-center my-5 my-lg-0">
                 <div class="container">
@@ -114,15 +65,6 @@
                                                 </div>
                                             </form>
                                         </div>
-                                        {{-- <div class="login-separater text-center mb-5"> <span>OR SIGN IN WITH</span>
-                                            <hr/>
-                                        </div> --}}
-                                        {{-- <div class="list-inline contacts-social text-center">
-                                            <a href="javascript:;" class="list-inline-item bg-facebook text-white border-0 rounded-3"><i class="bx bxl-facebook"></i></a>
-                                            <a href="javascript:;" class="list-inline-item bg-twitter text-white border-0 rounded-3"><i class="bx bxl-twitter"></i></a>
-                                            <a href="javascript:;" class="list-inline-item bg-google text-white border-0 rounded-3"><i class="bx bxl-google"></i></a>
-                                            <a href="javascript:;" class="list-inline-item bg-linkedin text-white border-0 rounded-3"><i class="bx bxl-linkedin"></i></a>
-                                        </div> --}}
     
                                     </div>
                                 </div>

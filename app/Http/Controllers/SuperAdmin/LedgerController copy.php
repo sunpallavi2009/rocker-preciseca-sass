@@ -423,163 +423,301 @@ class LedgerController extends Controller
             }
     
             $messages = $data['ENVELOPE']['BODY']['IMPORTDATA']['REQUESTDATA']['TALLYMESSAGE'];
-    
+
+
             foreach ($messages as $message) {
                 if (isset($message['VOUCHER'])) {
-                    $voucherData = $message['VOUCHER'];
+                        $voucherData = $message['VOUCHER'];
     
-                    $partyLedgerName = $voucherData['PARTYLEDGERNAME'] ?? $voucherData['PARTYNAME'] ?? null;
-    
-                    // Handle LEDGERENTRIES.LIST entries
-                    $ledgerEntries = [];
-                    if (isset($voucherData['LEDGERENTRIES.LIST']) && is_array($voucherData['LEDGERENTRIES.LIST'])) {
-                        foreach ($voucherData['LEDGERENTRIES.LIST'] as $entry) {
-                            if (isset($entry['LEDGERNAME'], $entry['AMOUNT'])) {
-                                $ledgerEntries[] = [
-                                    'ledger_name' => $entry['LEDGERNAME'],
-                                    'amount' => $entry['AMOUNT'],
-                                ];
-                            } else {
-                                Log::error('Missing or invalid LEDGERNAME or AMOUNT in LEDGERENTRIES.LIST entry: ' . json_encode($entry));
-                            }
-                        }
-                    }
-    
-                    // Handle ALLINVENTORYENTRIES.LIST entries
-                    $inventoryEntries = [];
-                    if (isset($voucherData['ALLINVENTORYENTRIES.LIST']) && is_array($voucherData['ALLINVENTORYENTRIES.LIST'])) {
-                        foreach ($voucherData['ALLINVENTORYENTRIES.LIST'] as $inventoryEntry) {
-                            $rateString = $inventoryEntry['RATE'] ?? null;
-                            $unit = null;
-                            
-                            // Extract rate and unit from rateString
-                            if ($rateString !== null) {
-                                // Split rateString by "/"
-                                $parts = explode('/', $rateString);
-                                if (count($parts) === 2) {
-                                    $rate = trim($parts[0]); // Extract rate part
-                                    $unit = trim($parts[1]); // Extract unit part
-                                } else {
-                                    $rate = $rateString; // Use the whole string as rate if no "/" found
-                                }
-                            } else {
-                                $rate = null;
-                            }
-    
-                            // Handle BATCHALLOCATIONS.LIST entries
-                            $batchAllocations = [];
-                            if (isset($inventoryEntry['BATCHALLOCATIONS.LIST']) && is_array($inventoryEntry['BATCHALLOCATIONS.LIST'])) {
-                                foreach ($inventoryEntry['BATCHALLOCATIONS.LIST'] as $batchAllocation) {
-                                    $batchAllocations[] = [
-                                        'godown_name' => $batchAllocation['GODOWNNAME'] ?? null,
-                                        'batch_name' => $batchAllocation['BATCHNAME'] ?? null,
-                                        'destination_godown_name' => $batchAllocation['DESTINATIONGODOWNNAME'] ?? null,
-                                        'order_no' => $batchAllocation['ORDERNO'] ?? null,
-                                        'amount' => $batchAllocation['AMOUNT'] ?? null,
-                                        'actual_qty' => $batchAllocation['ACTUALQTY'] ?? null,
-                                        'billed_qty' => $batchAllocation['BILLEDQTY'] ?? null,
+                        $partyLedgerName = $voucherData['PARTYLEDGERNAME'] ?? $voucherData['PARTYNAME'] ?? null;
+            
+                        // Handle LEDGERENTRIES.LIST entries
+                        $ledgerEntries = [];
+                        if (isset($voucherData['LEDGERENTRIES.LIST']) && is_array($voucherData['LEDGERENTRIES.LIST'])) {
+                            foreach ($voucherData['LEDGERENTRIES.LIST'] as $entry) {
+                                if (isset($entry['LEDGERNAME'], $entry['AMOUNT'])) {
+                                    $ledgerName = $entry['LEDGERNAME'];
+                                    $amount = $entry['AMOUNT'];
+            
+                                    // Save or process each ledger entry as needed
+                                    $ledgerEntries[] = [
+                                        'ledger_name' => $ledgerName,
+                                        'amount' => $amount,
                                     ];
+                                } else {
+                                    Log::error('Missing or invalid LEDGERNAME or AMOUNT in LEDGERENTRIES.LIST entry: ' . json_encode($entry));
                                 }
                             }
-    
-                            // Save or process each inventory entry as needed
-                            $inventoryEntries[] = [
-                                'stock_item_name' => $inventoryEntry['STOCKITEMNAME'] ?? null,
-                                'gst_taxability' => $inventoryEntry['GSTOVRDNTAXABILITY'] ?? null,
-                                'gst_source_type' => $inventoryEntry['GSTSOURCETYPE'] ?? null,
-                                'gst_item_source' => $inventoryEntry['GSTITEMSOURCE'] ?? null,
-                                'gst_ledger_source' => $inventoryEntry['GSTLEDGERSOURCE'] ?? null,
-                                'hsn_source_type' => $inventoryEntry['HSNSOURCETYPE'] ?? null,
-                                'hsn_item_source' => $inventoryEntry['HSNITEMSOURCE'] ?? null,
-                                'gst_rate_infer_applicability' => $inventoryEntry['GSTRATEINFERAPPLICABILITY'] ?? null,
-                                'gst_hsn_infer_applicability' => $inventoryEntry['GSTHSNINFERAPPLICABILITY'] ?? null,
-                                'rate' => $rate,
-                                'unit' => $unit, // Save unit separately
-                                'batch_allocations' => $batchAllocations, // Save batch allocations
-                            ];
                         }
-                    }
-    
-                    $guid = $voucherData['GUID'] ?? null;
-                    $companyGuid = substr($guid, 0, 36);
-    
-                    // Check if the voucher already exists
-                    $tallyVoucher = TallyVoucher::where('guid', $guid)->first();
-    
-                    if ($tallyVoucher) {
-                        // Update existing record if needed
-                        $tallyVoucher->update([
-                            'company_guid' => $companyGuid,
-                            'voucher_type' => $voucherData['VOUCHERTYPENAME'] ?? null,
-                            'is_cancelled' => $voucherData['ISCANCELLED'] ?? null,
-                            'alter_id' => $voucherData['ALTERID'] ?? null,
-                            'party_ledger_name' => $partyLedgerName,
-                            'voucher_number' => $voucherData['VOUCHERNUMBER'] ?? null,
-                            'voucher_date' => $voucherData['DATE'] ?? null,
-                            'place_of_supply' => $voucherData['PLACEOFSUPPLY'] ?? null,
-                            'country_of_residense' => $voucherData['COUNTRYOFRESIDENCE'] ?? null,
-                            'gst_registration_type' => $voucherData['GSTREGISTRATIONTYPE'] ?? null,
-                            'numbering_style' => $voucherData['NUMBERINGSTYLE'] ?? null,
-                        ]);
-                    } else {
-                        // Create new record if not exists
-                        $tallyVoucher = TallyVoucher::create([
-                            'guid' => $guid,
-                            'company_guid' => $companyGuid,
-                            'voucher_type' => $voucherData['VOUCHERTYPENAME'] ?? null,
-                            'is_cancelled' => $voucherData['ISCANCELLED'] ?? null,
-                            'alter_id' => $voucherData['ALTERID'] ?? null,
-                            'party_ledger_name' => $partyLedgerName,
-                            'voucher_number' => $voucherData['VOUCHERNUMBER'] ?? null,
-                            'voucher_date' => $voucherData['DATE'] ?? null,
-                            'place_of_supply' => $voucherData['PLACEOFSUPPLY'] ?? null,
-                            'country_of_residense' => $voucherData['COUNTRYOFRESIDENCE'] ?? null,
-                            'gst_registration_type' => $voucherData['GSTREGISTRATIONTYPE'] ?? null,
-                            'numbering_style' => $voucherData['NUMBERINGSTYLE'] ?? null,
-                        ]);
-                    }
-    
+            
+                        // Handle ALLINVENTORYENTRIES.LIST entries
+                        $inventoryEntries = [];
+                        if (isset($voucherData['ALLINVENTORYENTRIES.LIST']) && is_array($voucherData['ALLINVENTORYENTRIES.LIST'])) {
+                            foreach ($voucherData['ALLINVENTORYENTRIES.LIST'] as $inventoryEntry) {
+                                $rateString = $inventoryEntry['RATE'] ?? null;
+                                $unit = null;
+            
+                                // Extract rate and unit from rateString
+                                if ($rateString !== null) {
+                                    // Split rateString by "/"
+                                    $parts = explode('/', $rateString);
+                                    if (count($parts) === 2) {
+                                        $rate = trim($parts[0]); // Extract rate part
+                                        $unit = trim($parts[1]); // Extract unit part
+                                    } else {
+                                        $rate = $rateString; // Use the whole string as rate if no "/" found
+                                    }
+                                } else {
+                                    $rate = null;
+                                }
+            
+                                // Save or process each inventory entry as needed
+                                $inventoryEntries[] = [
+                                    'stock_item_name' => $inventoryEntry['STOCKITEMNAME'] ?? null,
+                                    'gst_taxability' => $inventoryEntry['GSTOVRDNTAXABILITY'] ?? null,
+                                    'gst_source_type' => $inventoryEntry['GSTSOURCETYPE'] ?? null,
+                                    'gst_item_source' => $inventoryEntry['GSTITEMSOURCE'] ?? null,
+                                    'gst_ledger_source' => $inventoryEntry['GSTLEDGERSOURCE'] ?? null,
+                                    'hsn_source_type' => $inventoryEntry['HSNSOURCETYPE'] ?? null,
+                                    'hsn_item_source' => $inventoryEntry['HSNLEDGERSOURCE'] ?? null,
+                                    'gst_rate_infer_applicability' => $inventoryEntry['GSTRATEINFERAPPLICABILITY'] ?? null,
+                                    'gst_hsn_infer_applicability' => $inventoryEntry['GSTHSNINFERAPPLICABILITY'] ?? null,
+                                    'rate' => $rate,
+                                    'unit' => $unit, // Save unit separately
+                                    // Add more fields as needed
+                                ];
+                            }
+                        }
+            
+                        $guid = $voucherData['GUID'] ?? null;
+                        $companyGuid = substr($guid, 0, 36);
+            
+                        // Check if the voucher already exists
+                        $tallyVoucher = TallyVoucher::where('guid', $guid)->first();
+            
+                        if ($tallyVoucher) {
+                            // Update existing record if needed
+                            $tallyVoucher->update([
+                                'company_guid' => $companyGuid,
+                                'voucher_type' => $voucherData['VOUCHERTYPENAME'] ?? null,
+                                'is_cancelled' => $voucherData['ISCANCELLED'] ?? null,
+                                'alter_id' => $voucherData['ALTERID'] ?? null,
+                                'party_ledger_name' => $partyLedgerName,
+                                'voucher_number' => $voucherData['VOUCHERNUMBER'] ?? null,
+                                'voucher_date' => $voucherData['DATE'] ?? null,
+                                'place_of_supply' => $voucherData['PLACEOFSUPPLY'] ?? null,
+                                'country_of_residense' => $voucherData['COUNTRYOFRESIDENCE'] ?? null,
+                                'gst_registration_type' => $voucherData['GSTREGISTRATIONTYPE'] ?? null,
+                                'numbering_style' => $voucherData['NUMBERINGSTYLE'] ?? null,
+                            ]);
+                        } else {
+                            // Create new record if not exists
+                            $tallyVoucher = TallyVoucher::create([
+                                'guid' => $guid,
+                                'company_guid' => $companyGuid,
+                                'voucher_type' => $voucherData['VOUCHERTYPENAME'] ?? null,
+                                'is_cancelled' => $voucherData['ISCANCELLED'] ?? null,
+                                'alter_id' => $voucherData['ALTERID'] ?? null,
+                                'party_ledger_name' => $partyLedgerName,
+                                'voucher_number' => $voucherData['VOUCHERNUMBER'] ?? null,
+                                'voucher_date' => $voucherData['DATE'] ?? null,
+                                'place_of_supply' => $voucherData['PLACEOFSUPPLY'] ?? null,
+                                'country_of_residense' => $voucherData['COUNTRYOFRESIDENCE'] ?? null,
+                                'gst_registration_type' => $voucherData['GSTREGISTRATIONTYPE'] ?? null,
+                                'numbering_style' => $voucherData['NUMBERINGSTYLE'] ?? null,
+                            ]);
+                        }
+            
+                        if (!$tallyVoucher) {
+                            throw new \Exception('Failed to create or update voucher item record.');
+                        }
+            
+                        // Handle ledger entries
+                        foreach ($ledgerEntries as $entry) {
+                            TallyVoucherEntry::updateOrCreate(
+                                [
+                                    'tally_voucher_id' => $tallyVoucher->id,
+                                    'ledger_name' => $entry['ledger_name'],
+                                ],
+                                [
+                                    'amount' => $entry['amount'],
+                                ]
+                            );
+                        }
+            
+                        // Create or update TallyVoucherItem records for ALLINVENTORYENTRIES.LIST
+                        foreach ($inventoryEntries as $item) {
+                            TallyVoucherItem::updateOrCreate(
+                                [
+                                    'tally_voucher_id' => $tallyVoucher->id,
+                                    'stock_item_name' => $item['stock_item_name'],
+                                    'rate' => $item['rate'],
+                                    'unit' => $item['unit'],
+                                ],
+                                [
+                                    'gst_taxability' => $item['gst_taxability'],
+                                    'gst_source_type' => $item['gst_source_type'],
+                                    'gst_item_source' => $item['gst_item_source'],
+                                    'gst_ledger_source' => $item['gst_ledger_source'],
+                                    'hsn_source_type' => $item['hsn_source_type'],
+                                    'hsn_item_source' => $item['hsn_item_source'],
+                                    'gst_rate_infer_applicability' => $item['gst_rate_infer_applicability'],
+                                    'gst_hsn_infer_applicability' => $item['gst_hsn_infer_applicability'],
+                                ]
+                            );
+                        }
+
                     if (!$tallyVoucher) {
-                        throw new \Exception('Failed to create or update voucher item record.');
-                    }
-    
-                    // Handle ledger entries
-                    foreach ($ledgerEntries as $entry) {
-                        TallyVoucherEntry::updateOrCreate(
-                            [
-                                'tally_voucher_id' => $tallyVoucher->id,
-                                'ledger_name' => $entry['ledger_name'],
-                            ],
-                            [
-                                'amount' => $entry['amount'],
-                            ]
-                        );
-                    }
-    
-                    // Create or update TallyVoucherItem records for ALLINVENTORYENTRIES.LIST
-                    foreach ($inventoryEntries as $item) {
-                        TallyVoucherItem::updateOrCreate(
-                            [
-                                'tally_voucher_id' => $tallyVoucher->id,
-                                'stock_item_name' => $item['stock_item_name'],
-                                'rate' => $item['rate'],
-                                'unit' => $item['unit'],
-                            ],
-                            [
-                                'gst_taxability' => $item['gst_taxability'],
-                                'gst_source_type' => $item['gst_source_type'],
-                                'gst_item_source' => $item['gst_item_source'],
-                                'gst_ledger_source' => $item['gst_ledger_source'],
-                                'hsn_source_type' => $item['hsn_source_type'],
-                                'hsn_item_source' => $item['hsn_item_source'],
-                                'gst_rate_infer_applicability' => $item['gst_rate_infer_applicability'],
-                                'gst_hsn_infer_applicability' => $item['gst_hsn_infer_applicability'],
-                                'batch_allocations' => $item['batch_allocations'] ?? [], // Save batch allocations
-                            ]
-                        );
+                        throw new \Exception('Failed to create or update tally voucher record.');
                     }
                 }
             }
+    
+            // foreach ($messages as $message) {
+            //     if (!isset($message['VOUCHER'])) {
+            //         throw new \Exception('Invalid message structure.');
+            //     }
+    
+            //     $voucherData = $message['VOUCHER'];
+    
+            //     $partyLedgerName = $voucherData['PARTYLEDGERNAME'] ?? $voucherData['PARTYNAME'] ?? null;
+    
+            //     // Handle LEDGERENTRIES.LIST entries
+            //     $ledgerEntries = [];
+            //     if (isset($voucherData['LEDGERENTRIES.LIST']) && is_array($voucherData['LEDGERENTRIES.LIST'])) {
+            //         foreach ($voucherData['LEDGERENTRIES.LIST'] as $entry) {
+            //             if (isset($entry['LEDGERNAME'], $entry['AMOUNT'])) {
+            //                 $ledgerName = $entry['LEDGERNAME'];
+            //                 $amount = $entry['AMOUNT'];
+    
+            //                 // Save or process each ledger entry as needed
+            //                 $ledgerEntries[] = [
+            //                     'ledger_name' => $ledgerName,
+            //                     'amount' => $amount,
+            //                 ];
+            //             } else {
+            //                 Log::error('Missing or invalid LEDGERNAME or AMOUNT in LEDGERENTRIES.LIST entry: ' . json_encode($entry));
+            //             }
+            //         }
+            //     }
+    
+            //     // Handle ALLINVENTORYENTRIES.LIST entries
+            //     $inventoryEntries = [];
+            //     if (isset($voucherData['ALLINVENTORYENTRIES.LIST']) && is_array($voucherData['ALLINVENTORYENTRIES.LIST'])) {
+            //         foreach ($voucherData['ALLINVENTORYENTRIES.LIST'] as $inventoryEntry) {
+            //             $rateString = $inventoryEntry['RATE'] ?? null;
+            //             $unit = null;
+    
+            //             // Extract rate and unit from rateString
+            //             if ($rateString !== null) {
+            //                 // Split rateString by "/"
+            //                 $parts = explode('/', $rateString);
+            //                 if (count($parts) === 2) {
+            //                     $rate = trim($parts[0]); // Extract rate part
+            //                     $unit = trim($parts[1]); // Extract unit part
+            //                 } else {
+            //                     $rate = $rateString; // Use the whole string as rate if no "/" found
+            //                 }
+            //             } else {
+            //                 $rate = null;
+            //             }
+    
+            //             // Save or process each inventory entry as needed
+            //             $inventoryEntries[] = [
+            //                 'stock_item_name' => $inventoryEntry['STOCKITEMNAME'] ?? null,
+            //                 'gst_taxability' => $inventoryEntry['GSTOVRDNTAXABILITY'] ?? null,
+            //                 'gst_source_type' => $inventoryEntry['GSTSOURCETYPE'] ?? null,
+            //                 'gst_item_source' => $inventoryEntry['GSTITEMSOURCE'] ?? null,
+            //                 'gst_ledger_source' => $inventoryEntry['GSTLEDGERSOURCE'] ?? null,
+            //                 'hsn_source_type' => $inventoryEntry['HSNSOURCETYPE'] ?? null,
+            //                 'hsn_item_source' => $inventoryEntry['HSNLEDGERSOURCE'] ?? null,
+            //                 'gst_rate_infer_applicability' => $inventoryEntry['GSTRATEINFERAPPLICABILITY'] ?? null,
+            //                 'gst_hsn_infer_applicability' => $inventoryEntry['GSTHSNINFERAPPLICABILITY'] ?? null,
+            //                 'rate' => $rate,
+            //                 'unit' => $unit, // Save unit separately
+            //                 // Add more fields as needed
+            //             ];
+            //         }
+            //     }
+    
+            //     $guid = $voucherData['GUID'] ?? null;
+            //     $companyGuid = substr($guid, 0, 36);
+    
+            //     // Check if the voucher already exists
+            //     $tallyVoucher = TallyVoucher::where('guid', $guid)->first();
+    
+            //     if ($tallyVoucher) {
+            //         // Update existing record if needed
+            //         $tallyVoucher->update([
+            //             'company_guid' => $companyGuid,
+            //             'voucher_type' => $voucherData['VOUCHERTYPENAME'] ?? null,
+            //             'is_cancelled' => $voucherData['ISCANCELLED'] ?? null,
+            //             'alter_id' => $voucherData['ALTERID'] ?? null,
+            //             'party_ledger_name' => $partyLedgerName,
+            //             'voucher_number' => $voucherData['VOUCHERNUMBER'] ?? null,
+            //             'voucher_date' => $voucherData['DATE'] ?? null,
+            //             'place_of_supply' => $voucherData['PLACEOFSUPPLY'] ?? null,
+            //             'country_of_residense' => $voucherData['COUNTRYOFRESIDENCE'] ?? null,
+            //             'gst_registration_type' => $voucherData['GSTREGISTRATIONTYPE'] ?? null,
+            //             'numbering_style' => $voucherData['NUMBERINGSTYLE'] ?? null,
+            //         ]);
+            //     } else {
+            //         // Create new record if not exists
+            //         $tallyVoucher = TallyVoucher::create([
+            //             'guid' => $guid,
+            //             'company_guid' => $companyGuid,
+            //             'voucher_type' => $voucherData['VOUCHERTYPENAME'] ?? null,
+            //             'is_cancelled' => $voucherData['ISCANCELLED'] ?? null,
+            //             'alter_id' => $voucherData['ALTERID'] ?? null,
+            //             'party_ledger_name' => $partyLedgerName,
+            //             'voucher_number' => $voucherData['VOUCHERNUMBER'] ?? null,
+            //             'voucher_date' => $voucherData['DATE'] ?? null,
+            //             'place_of_supply' => $voucherData['PLACEOFSUPPLY'] ?? null,
+            //             'country_of_residense' => $voucherData['COUNTRYOFRESIDENCE'] ?? null,
+            //             'gst_registration_type' => $voucherData['GSTREGISTRATIONTYPE'] ?? null,
+            //             'numbering_style' => $voucherData['NUMBERINGSTYLE'] ?? null,
+            //         ]);
+            //     }
+    
+            //     if (!$tallyVoucher) {
+            //         throw new \Exception('Failed to create or update voucher item record.');
+            //     }
+    
+            //     // Handle ledger entries
+            //     foreach ($ledgerEntries as $entry) {
+            //         TallyVoucherEntry::updateOrCreate(
+            //             [
+            //                 'tally_voucher_id' => $tallyVoucher->id,
+            //                 'ledger_name' => $entry['ledger_name'],
+            //             ],
+            //             [
+            //                 'amount' => $entry['amount'],
+            //             ]
+            //         );
+            //     }
+    
+            //     // Create or update TallyVoucherItem records for ALLINVENTORYENTRIES.LIST
+            //     foreach ($inventoryEntries as $item) {
+            //         TallyVoucherItem::updateOrCreate(
+            //             [
+            //                 'tally_voucher_id' => $tallyVoucher->id,
+            //                 'stock_item_name' => $item['stock_item_name'],
+            //                 'rate' => $item['rate'],
+            //                 'unit' => $item['unit'],
+            //             ],
+            //             [
+            //                 'gst_taxability' => $item['gst_taxability'],
+            //                 'gst_source_type' => $item['gst_source_type'],
+            //                 'gst_item_source' => $item['gst_item_source'],
+            //                 'gst_ledger_source' => $item['gst_ledger_source'],
+            //                 'hsn_source_type' => $item['hsn_source_type'],
+            //                 'hsn_item_source' => $item['hsn_item_source'],
+            //                 'gst_rate_infer_applicability' => $item['gst_rate_infer_applicability'],
+            //                 'gst_hsn_infer_applicability' => $item['gst_hsn_infer_applicability'],
+            //             ]
+            //         );
+            //     }
+            // }
     
             return response()->json(['message' => 'Tally voucher data saved successfully.']);
     
@@ -588,6 +726,5 @@ class LedgerController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
-    
 
 }

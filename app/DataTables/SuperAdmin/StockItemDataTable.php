@@ -1,14 +1,14 @@
 <?php
 
-namespace App\DataTables;
+namespace App\DataTables\SuperAdmin;
 
 use Carbon\Carbon;
-use App\Models\TallyOtherLedger;
+use App\Models\TallyItem;
 use App\Facades\UtilityFacades;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Services\DataTable;
 
-class TallyOtherLedgerDataTable extends DataTable
+class StockItemDataTable extends DataTable
 {
 
     public function dataTable($query)
@@ -21,7 +21,7 @@ class TallyOtherLedgerDataTable extends DataTable
             });
     }
 
-    public function query(TallyOtherLedger $model)
+    public function query(TallyItem $model)
     {
         return $model->newQuery();
     }
@@ -29,7 +29,7 @@ class TallyOtherLedgerDataTable extends DataTable
     public function html()
     {
         return $this->builder()
-            ->setTableId('tallyOtherLedger-table')
+            ->setTableId('stock-item-table')
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(1)
@@ -94,26 +94,12 @@ class TallyOtherLedgerDataTable extends DataTable
     {
         return [
             Column::make('No')->data('DT_RowIndex')->name('DT_RowIndex')->searchable(false)->orderable(false),
-            Column::make('guid')->title(__('Guid')),
-            Column::make('currency_name')->title(__('Currency Name')),
-            Column::make('prior_state_name')->title(__('PRIORSTATENAME')),
-            Column::make('income_tax_number')->title(__('INCOMETAXNUMBER')),
-            Column::make('parent')->title(__('Parent')),
-            // Column::make('tcs_applicable')->title(__('TCSAPPLICABLE')),
-            Column::make('tax_classification_name')->title(__('TAXCLASSIFICATIONNAME')),
-            Column::make('tax_type')->title(__('TAXTYPE')),
-            // Column::make('country_of_residence')->title(__('COUNTRYOFRESIDENCE')),
-            // Column::make('ledger_country_isd_code')->title(__('LEDGERCOUNTRYISDCODE')),
-            Column::make('gst_type')->title(__('GSTTYPE')),
-            Column::make('appropriate_for')->title(__('APPROPRIATEFOR')),
-            // Column::make('gst_nature_of_supply')->title(__('GSTNATUREOFSUPPLY')),
-            Column::make('service_category')->title(__('SERVICECATEGORY')),
-            // Column::make('party_business_style')->title(__('PARTYBUSINESSSTYLE')),
-            Column::make('is_bill_wise_on')->title(__('ISBILLWISEON')),
-            Column::make('is_cost_centres_on')->title(__('ISCOSTCENTRESON')),
-            Column::make('alter_id')->title(__('Alter Id')),
-            // Column::make('opening_balance')->title(__('OPENINGBALANCE')),
-            Column::make('address')->title(__('Address')),
+            // Column::make('guid')->title(__('Guid')),
+            Column::make('language_name')->title(__('Name')),
+            Column::make('parent')->title(__('Stock Group')),
+            Column::make('opening_balance')->title(__('Stock On Hand (qty)')),
+            Column::make('opening_value')->title(__('Stock On Hand (value)')),
+            Column::make('alias')->title(__('Alias')),
         ];
     }
 

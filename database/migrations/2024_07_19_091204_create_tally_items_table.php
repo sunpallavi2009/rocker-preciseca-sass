@@ -78,6 +78,7 @@ return new class extends Migration
             $table->json('gst_details')->nullable();
             $table->json('hsn_details')->nullable();
             $table->string('language_name')->nullable();
+            $table->string('alias')->nullable();
             $table->string('language_id')->nullable();
             $table->json('batch_allocations')->nullable();
             $table->timestamps();

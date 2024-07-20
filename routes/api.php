@@ -26,17 +26,10 @@ Route::post('/ledgers/{token_id}/{company_id}', [JsonImportController::class, 'l
     ->middleware('tenant');
 
 
+Route::post('/companies', [LedgerController::class, 'companyJsonImport'])->name('company.import');
     
 Route::post('/master', [LedgerController::class, 'masterJsonImport'])->name('master.import');
 
 Route::post('/stock_item', [LedgerController::class, 'stockItemJsonImport'])->name('stockItem.import');
 
-Route::post('/tally_groups', [TallyController::class, 'tallyGroupJsonImport'])->name('tallyGroup.import');
-
-Route::post('/tally_ledgers', [TallyController::class, 'tallyLedgerJsonImport'])->name('tallyLedger.import');
-
-Route::post('/tally_other_ledgers', [TallyController::class, 'tallyOtherLedgerJsonImport'])->name('tallyOtherLedger.import');
-
-Route::post('/tally_stock_items', [TallyController::class, 'tallyStockItemJsonImport'])->name('tallyStockItem.import');
-
-Route::post('/vouchers', [TallyController::class, 'tallyVoucherJsonImport'])->name('tallyVoucher.import');
+Route::post('/vouchers', [LedgerController::class, 'voucherJsonImport'])->name('voucher.import');

@@ -34,6 +34,7 @@ return new class extends Migration
             $table->string('is_cost_centres_on')->nullable();
             $table->integer('alter_id')->nullable();
             $table->string('language_name')->nullable();
+            // $table->string('alias')->nullable();
             $table->integer('language_id')->nullable();
             $table->date('applicable_from')->nullable();
             $table->string('ledger_gst_registration_type')->nullable();

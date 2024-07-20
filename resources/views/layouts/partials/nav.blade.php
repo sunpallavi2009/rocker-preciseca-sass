@@ -40,13 +40,40 @@
                 <li class="nav-item dropend">
                   <a class="dropdown-item dropdown-toggle dropdown-toggle-nocaret" href="javascript:;"><i class='bx bx-file'></i>Tally list</a>
                   <ul class="dropdown-menu submenu">
-                      <li><a class="dropdown-item" href="{{ route('tally.index') }}"><i class='bx bx-radio-circle'></i>Group list</a></li>
+                      {{-- <li><a class="dropdown-item" href="{{ route('tally.index') }}"><i class='bx bx-radio-circle'></i>Group list</a></li>
                       <li><a class="dropdown-item" href="{{ route('jsonImport.ledger.show') }}"><i class='bx bx-radio-circle'></i>Ledger list</a></li>
                       <li><a class="dropdown-item" href="{{ route('jsonImport.otherledger.show') }}"><i class='bx bx-radio-circle'></i>Other Ledger list</a></li>
-                      <li><a class="dropdown-item" href="{{ route('jsonImport.stockitem.show') }}"><i class='bx bx-radio-circle'></i>Stock Item list</a></li>
+                      <li><a class="dropdown-item" href="{{ route('jsonImport.stockitem.show') }}"><i class='bx bx-radio-circle'></i>Stock Item list</a></li> --}}
                     </ul>
                 </li>
               </ul>
+            </li>
+
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" href="{{ route('customers.index') }}">
+                  <div class="parent-icon"><i class='bx bx-user'></i>
+                  </div>
+                  <div class="menu-title d-flex align-items-center">Customers</div>
+                  {{-- <div class="ms-auto dropy-icon"><i class='bx bx-chevron-down'></i></div> --}}
+              </a>
+            </li>
+
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" href="{{ route('suppliers.index') }}">
+                  <div class="parent-icon"><i class='bx bx-user'></i>
+                  </div>
+                  <div class="menu-title d-flex align-items-center">Suppliers</div>
+                  {{-- <div class="ms-auto dropy-icon"><i class='bx bx-chevron-down'></i></div> --}}
+              </a>
+            </li>
+
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" href="{{ route('stock-items.index') }}">
+                  <div class="parent-icon"><i class='bx bx-user'></i>
+                  </div>
+                  <div class="menu-title d-flex align-items-center">Stock Item</div>
+                  {{-- <div class="ms-auto dropy-icon"><i class='bx bx-chevron-down'></i></div> --}}
+              </a>
             </li>
             
             <li class="nav-item dropdown d-none">

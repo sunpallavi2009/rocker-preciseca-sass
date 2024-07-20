@@ -4,6 +4,9 @@ use Laravel\Jetstream\Jetstream;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\TenantController;
+use App\Http\Controllers\SuperAdmin\CustomerController;
+use App\Http\Controllers\SuperAdmin\SupplierController;
+use App\Http\Controllers\SuperAdmin\StockItemController;
 use App\Http\Controllers\SuperAdmin\TallyController;
 use Laravel\Jetstream\Http\Controllers\CurrentTeamController;
 use Laravel\Jetstream\Http\Controllers\Inertia\TeamController;
@@ -54,6 +57,10 @@ Route::middleware([
     Route::get('/dashboard', [HomeController::class, 'index']);
     
     Route::resource('tenants', TenantController::class);
+
+    Route::resource('customers', CustomerController::class);
+    Route::resource('suppliers', SupplierController::class);
+    Route::resource('stock-items', StockItemController::class);
 
     Route::resource('tally', TallyController::class);
     
