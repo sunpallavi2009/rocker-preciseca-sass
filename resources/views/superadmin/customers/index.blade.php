@@ -36,4 +36,22 @@
 @push('javascript')
     @include('layouts.includes.datatable-js')
     {!! $dataTable->scripts() !!}
+
+    <script>
+        $(document).ready(function() {
+            var table = $('#customer-table').DataTable();
+
+            $('#customer-table').on('click', '.dt-button', function() {
+                var button = $(this).text();
+                
+                if (button.includes('Top Customer')) {
+                    table.ajax.url('customers.index?filter=top_customers').load();
+                } else if (button.includes('No Sales')) {
+                    table.ajax.url('customers.index?filter=no_sales').load();
+                }else if (button.includes('Reset')) {
+                    table.ajax.url('{{ route('customers.index') }}').load();
+                }
+            });
+        });
+    </script>
 @endpush

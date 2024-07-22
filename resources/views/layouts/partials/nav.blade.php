@@ -15,7 +15,7 @@
        <div class="offcanvas-body">
          <ul class="navbar-nav align-items-center flex-grow-1">
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" href="{{ route('dashboard') }}">
+            <a class="nav-link dropdown-toggle dropdown-toggle-nocaret {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
                 <div class="parent-icon"><i class='bx bx-home-alt'></i>
                 </div>
                 <div class="menu-title d-flex align-items-center">Dashboard</div>
@@ -50,7 +50,7 @@
             </li>
 
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" href="{{ route('customers.index') }}">
+              <a class="nav-link dropdown-toggle dropdown-toggle-nocaret {{ request()->routeIs('customers.index') ? 'active' : '' }}" href="{{ route('customers.index') }}">
                   <div class="parent-icon"><i class='bx bx-user'></i>
                   </div>
                   <div class="menu-title d-flex align-items-center">Customers</div>
@@ -59,7 +59,7 @@
             </li>
 
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" href="{{ route('suppliers.index') }}">
+              <a class="nav-link dropdown-toggle dropdown-toggle-nocaret {{ request()->routeIs('suppliers.index') ? 'active' : '' }}" href="{{ route('suppliers.index') }}">
                   <div class="parent-icon"><i class='bx bx-user'></i>
                   </div>
                   <div class="menu-title d-flex align-items-center">Suppliers</div>
@@ -68,10 +68,19 @@
             </li>
 
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" href="{{ route('stock-items.index') }}">
+              <a class="nav-link dropdown-toggle dropdown-toggle-nocaret {{ request()->routeIs('stock-items.index') ? 'active' : '' }}" href="{{ route('stock-items.index') }}">
                   <div class="parent-icon"><i class='bx bx-user'></i>
                   </div>
                   <div class="menu-title d-flex align-items-center">Stock Item</div>
+                  {{-- <div class="ms-auto dropy-icon"><i class='bx bx-chevron-down'></i></div> --}}
+              </a>
+            </li>
+
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle dropdown-toggle-nocaret {{ request()->routeIs('reports.index') ? 'active' : '' }}" href="{{ route('reports.index') }}">
+                  <div class="parent-icon"><i class='bx bx-calculator'></i>
+                  </div>
+                  <div class="menu-title d-flex align-items-center">Reports</div>
                   {{-- <div class="ms-auto dropy-icon"><i class='bx bx-chevron-down'></i></div> --}}
               </a>
             </li>

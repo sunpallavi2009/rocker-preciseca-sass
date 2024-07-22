@@ -18,6 +18,9 @@ class SupplierDataTable extends DataTable
             ->addIndexColumn()
             ->editColumn('created_at', function ($request) {
                 return Carbon::parse($request->created_at)->format('Y-m-d H:i:s');
+            })
+            ->editColumn('opening_balance', function ($data) {
+                return $data->opening_balance ? number_format(abs($data->opening_balance), 2) : '0.00';
             });
     }
 
@@ -32,7 +35,7 @@ class SupplierDataTable extends DataTable
             ->setTableId('supplier-table')
             ->columns($this->getColumns())
             ->minifiedAjax()
-            ->orderBy(1)
+            ->orderBy(3)
             ->language([
                 "paginate" => [
                     "next" => '<i class="ti ti-chevron-right"></i>next',
@@ -97,6 +100,22 @@ class SupplierDataTable extends DataTable
             // Column::make('guid')->title(__('Guid')),
             Column::make('language_name')->title(__('Name')),
             Column::make('parent')->title(__('Group')),
+            Column::make('opening_balance')->title(__('&#8377 Purchase (Last 30 days)'))->addClass('text-end'),
+            Column::make('opening_balance')->title(__('&#8377 Returns (Last 30 days)'))->addClass('text-end'),
+            Column::make('opening_balance')->title(__('&#8377 Net Outstanding (As of Today)'))->addClass('text-end'),
+            Column::make('opening_balance')->title(__('&#8377 Overdue (Total)'))->addClass('text-end'),
+            Column::make('opening_balance')->title(__('Overdue (Since)'))->addClass('text-end'),
+            Column::make('opening_balance')->title(__('&#8377 Upcoming (Total)'))->addClass('text-end'),
+            Column::make('opening_balance')->title(__('&#8377 On Account (As of Today)'))->addClass('text-end'),
+            Column::make('opening_balance')->title(__('&#8377 Post Date Collection (Total)'))->addClass('text-end'),
+            Column::make('opening_balance')->title(__('&#8377 Average Purchase (Value)'))->addClass('text-end'),
+            Column::make('opening_balance')->title(__('&#8377 Payment Made (Current FY)'))->addClass('text-end'),
+            Column::make('opening_balance')->title(__('Last Payment (Done on)'))->addClass('text-end'),
+            Column::make('opening_balance')->title(__('Avg Pay Days'))->addClass('text-end'),
+            Column::make('opening_balance')->title(__('Bank Account Number'))->addClass('text-end'),
+            Column::make('opening_balance')->title(__('IFSC'))->addClass('text-end'),
+            Column::make('opening_balance')->title(__('Branch Name'))->addClass('text-end'),
+            Column::make('party_gst_in')->title(__('GSTIN'))->addClass('text-end'),
         ];
     }
 
