@@ -3,12 +3,12 @@
 namespace App\DataTables\SuperAdmin;
 
 use Carbon\Carbon;
-use App\Models\TallyItem;
+use App\Models\User;
 use App\Facades\UtilityFacades;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Services\DataTable;
 
-class StockItemDataTable extends DataTable
+class UserDataTable extends DataTable
 {
 
     public function dataTable($query)
@@ -17,11 +17,14 @@ class StockItemDataTable extends DataTable
             ->eloquent($query)
             ->addIndexColumn()
             ->editColumn('created_at', function ($request) {
-                return Carbon::parse($request->created_at)->format('Y-m-d H:i:s');
+                return Carbon::parse($request->created_at)->format('Y-m-d');
+            })
+            ->editColumn('updated_at', function ($request) {
+                return Carbon::parse($request->updated_at)->format('Y-m-d');
             });
     }
 
-    public function query(TallyItem $model)
+    public function query(User $model)
     {
         return $model->newQuery();
     }
@@ -29,10 +32,10 @@ class StockItemDataTable extends DataTable
     public function html()
     {
         return $this->builder()
-            ->setTableId('stock-item-table')
+            ->setTableId('user-table')
             ->columns($this->getColumns())
             ->minifiedAjax()
-            ->orderBy(1)
+            ->orderBy(3)
             ->language([
                 "paginate" => [
                     "next" => '<i class="ti ti-chevron-right"></i>next',
@@ -94,30 +97,10 @@ class StockItemDataTable extends DataTable
     {
         return [
             Column::make('No')->data('DT_RowIndex')->name('DT_RowIndex')->searchable(false)->orderable(false),
-            // Column::make('guid')->title(__('Guid')),
-            Column::make('language_name')->title(__('Name')),
-            Column::make('parent')->title(__('Stock Group')),
-            Column::make('opening_balance')->title(__('Stock On Hand (qty)')),
-            Column::make('opening_value')->title(__('Stock On Hand (value)')),
-            Column::make('parent')->title(__('Ordered Qty (Purchase Pending)')),
-            Column::make('parent')->title(__('Committed Qty (For Sale)')),
-            Column::make('parent')->title(__('Stock Available (For Sale)')),
-            Column::make('parent')->title(__('&#8377 Total Sales Value (Last 30 days)')),
-            Column::make('parent')->title(__('&#8377 Total Sales Qty (Last 30 days)')),
-            Column::make('parent')->title(__('&#8377 Last Sale (value)')),
-            Column::make('parent')->title(__('Last Sale (Date)')),
-            Column::make('parent')->title(__('&#8377 Total Purchase Value (Last 30 days)')),
-            Column::make('parent')->title(__('&#8377 Total Purchase Qty (Last 30 days)')),
-            Column::make('parent')->title(__('&#8377 Last Purchase (value)')),
-            Column::make('parent')->title(__('Last Purchase (Date)')),
-            Column::make('parent')->title(__('&#8377 Std Sell Price')),
-            Column::make('parent')->title(__('&#8377 Std Cost Price')),
-            Column::make('parent')->title(__('GST Rate')),
-            Column::make('parent')->title(__('Likely To Run Out (In Days)')),
-            Column::make('parent')->title(__('Reorder Level')),
-            Column::make('parent')->title(__('Stock Category')),
-            Column::make('alias')->title(__('Alias')),
-            Column::make('parent')->title(__('Supplier Item No.')),
+            Column::make('name')->title(__('Name')),
+            Column::make('email')->title(__('Email')),
+            Column::make('created_at')->title(__('Created At')),
+            Column::make('updated_at')->title(__('Upadated At')),
         ];
     }
 

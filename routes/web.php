@@ -8,6 +8,7 @@ use App\Http\Controllers\SuperAdmin\CustomerController;
 use App\Http\Controllers\SuperAdmin\SupplierController;
 use App\Http\Controllers\SuperAdmin\StockItemController;
 use App\Http\Controllers\SuperAdmin\ReportController;
+use App\Http\Controllers\SuperAdmin\UserController;
 use App\Http\Controllers\SuperAdmin\TallyController;
 use Laravel\Jetstream\Http\Controllers\CurrentTeamController;
 use Laravel\Jetstream\Http\Controllers\Inertia\TeamController;
@@ -65,6 +66,8 @@ Route::middleware([
 
     
     Route::resource('reports', ReportController::class);
+
+    Route::resource('users', UserController::class);
 
 
     Route::resource('tally', TallyController::class);
