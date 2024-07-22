@@ -35,7 +35,7 @@ return new class extends Migration
             $table->integer('alter_id')->nullable();
             $table->integer('opening_balance')->nullable();
             $table->string('language_name')->nullable();
-            // $table->string('alias')->nullable();
+            $table->string('alias')->nullable();
             $table->integer('language_id')->nullable();
             $table->date('applicable_from')->nullable();
             $table->string('ledger_gst_registration_type')->nullable();

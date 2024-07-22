@@ -61,6 +61,11 @@ Route::middleware([
     Route::resource('tenants', TenantController::class);
 
     Route::resource('customers', CustomerController::class);
+        
+    // Route::get('customers/show', [CustomerController::class,'customerShow'])->name('customers.show');
+
+
+
     Route::resource('suppliers', SupplierController::class);
     Route::resource('stock-items', StockItemController::class);
 

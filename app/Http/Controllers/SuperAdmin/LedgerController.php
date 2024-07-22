@@ -123,10 +123,10 @@ class LedgerController extends Controller
                     $ledgerData = $message['LEDGER'];
                     Log::info('Ledger Data:', ['ledgerData' => $ledgerData]);
 
-                        $nameField = $ledgerData['LANGUAGENAME.LIST']['NAME.LIST']['NAME'] ?? null;
-                        if (is_array($nameField)) {
-                            $nameField = implode(', ', $nameField);
-                        }
+                        // $nameField = $ledgerData['LANGUAGENAME.LIST']['NAME.LIST']['NAME'] ?? null;
+                        // if (is_array($nameField)) {
+                        //     $nameField = implode(', ', $nameField);
+                        // }
 
                         $applicableFrom = null;
                         if (isset($ledgerData['LEDGSTREGDETAILS.LIST']['APPLICABLEFROM'])) {
@@ -145,6 +145,20 @@ class LedgerController extends Controller
 
                         $guid = $ledgerData['GUID'] ?? null;
                         $companyGuid = substr($guid, 0, 36);
+
+                        $nameField = $ledgerData['LANGUAGENAME.LIST']['NAME.LIST']['NAME'] ?? [];
+                        if (is_array($nameField)) {
+                            $languageName = $nameField[0] ?? null;
+                            $alias = $nameField[1] ?? null;
+                        } else {
+                            $languageName = $nameField;
+                            $alias = null;
+                        }
+
+                        // Debugging output
+                        // Log::info('nameField:', ['nameField' => $nameField]);
+                        // Log::info('LANGUAGENAME:', ['languageName' => $languageName]);
+                        // Log::info('alias:', ['alias' => $alias]);
 
                         $tallyLedger = TallyLedger::updateOrCreate(
                             ['guid' => $guid],
@@ -166,7 +180,8 @@ class LedgerController extends Controller
                                 'is_cost_centres_on' => $ledgerData['ISCOSTCENTRESON'] ?? null,
                                 'alter_id' => $ledgerData['ALTERID'] ?? null,
                                 'opening_balance' => $ledgerData['OPENINGBALANCE'] ?? null,
-                                'language_name' => $nameField,
+                                'language_name' => $languageName,
+                                'alias' => $alias,
                                 'language_id' => $ledgerData['LANGUAGENAME.LIST']['LANGUAGEID'] ?? null,
                                 'applicable_from' => $applicableFrom,
                                 'ledger_gst_registration_type' => $ledgerData['LEDGSTREGDETAILS.LIST']['GSTREGISTRATIONTYPE'] ?? null,
@@ -293,9 +308,18 @@ class LedgerController extends Controller
                     $stockItemData = $message['STOCKITEM'];
                     Log::info('Stock Item Data:', ['stockItemData' => $stockItemData]);
 
+                    // $nameField = $stockItemData['LANGUAGENAME.LIST']['NAME.LIST']['NAME'] ?? [];
+                    // $languageName = $nameField[0] ?? null;
+                    // $alias = $nameField[1] ?? null;
+
                     $nameField = $stockItemData['LANGUAGENAME.LIST']['NAME.LIST']['NAME'] ?? [];
-                    $languageName = $nameField[0] ?? null;
-                    $alias = $nameField[1] ?? null;
+                    if (is_array($nameField)) {
+                        $languageName = $nameField[0] ?? null;
+                        $alias = $nameField[1] ?? null;
+                    } else {
+                        $languageName = $nameField;
+                        $alias = null;
+                    }
 
                     $tallyStockItem = TallyItem::updateOrCreate(
                         ['guid' => $stockItemData['GUID'] ?? null],

@@ -18,4 +18,9 @@ class CustomerController extends Controller
         return $dataTable->render('superadmin.customers.index');
     }
 
+    public function show()
+    {
+        return view ('superadmin.customers._customers-view');
+    }
+
 }
