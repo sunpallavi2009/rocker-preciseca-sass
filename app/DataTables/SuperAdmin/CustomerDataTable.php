@@ -37,7 +37,12 @@ class CustomerDataTable extends DataTable
             })
             ->editColumn('opening_balance', function ($data) {
                 return $data->opening_balance ? number_format(abs($data->opening_balance), 2) : '0.00';
-            });
+            })
+            ->editColumn('language_name', function ($data) {
+                $url = route('customers.show', ['customer' => $data->guid]); // Ensure 'customer' matches the route parameter name
+                return '<a href="' . $url . '" style="color: #337ab7;">' . $data->language_name . '</a>';
+            })
+            ->rawColumns(['language_name']);
     }
 
     public function query(TallyLedger $model)

@@ -1,5 +1,9 @@
 @extends("layouts.app")
 @section('title', __('Customers | Preciseca'))
+@section("style")
+<link href="{{ asset('assets/plugins/bs-stepper/css/bs-stepper.css') }}" rel="stylesheet" />
+<link href="{{ asset('assets/plugins/datatable/css/dataTables.bootstrap5.min.css') }}" rel="stylesheet" />
+@endsection
 @section("wrapper")
     <div class="page-wrapper">
     <div class="page-content">
@@ -18,466 +22,244 @@
         </div>
         <!--end breadcrumb-->
       
-        <!--start email wrapper-->
-        <div class="email-wrapper">
-            <div class="email-sidebar">
-                <div class="email-sidebar-header d-grid"> <a href="javascript:;" class="btn btn-info compose-mail-btn"><i class='bx bx-left-arrow-alt me-2'></i> <span class="ms-auto">7,513</span> Customers</a>
+        <div class="card">
+            <div class="card-body">
+                <div class="d-lg-flex align-items-center mb-4 gap-3">
                 </div>
-                <div class="email-sidebar-content">
-                    <div class="email-navigation" style="height: 530px;border-bottom: none;">
-                        <div class="list-group list-group-flush"> <a href="app-emailbox.html" class="list-group-item active d-flex align-items-center"><i class='bx bxs-inbox me-3 font-20'></i><span>Inbox</span><span class="badge bg-primary rounded-pill ms-auto">7,513</span></a>
-                            <a href="javascript:;" class="list-group-item d-flex align-items-center"><i class='bx bxs-star me-3 font-20'></i><span>Starred</span></a>
-                            <a href="javascript:;" class="list-group-item d-flex align-items-center"><i class='bx bxs-alarm-snooze me-3 font-20'></i><span>Snoozed</span></a>
-                            <a href="javascript:;" class="list-group-item d-flex align-items-center"><i class='bx bxs-send me-3 font-20'></i><span>Sent</span></a>
-                            <a href="javascript:;" class="list-group-item d-flex align-items-center"><i class='bx bxs-file-blank me-3 font-20'></i><span>Drafts</span><span class="badge bg-primary rounded-pill ms-auto">4</span></a>
-                            <a href="javascript:;" class="list-group-item d-flex align-items-center"><i class='bx bxs-bookmark me-3 font-20'></i><span>Important</span></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="email-header d-xl-flex align-items-center" style="height: auto;">
-             
-
-                    <div class="col-lg-12">
-                        <div class="col">
-                            <div class="card radius-10 border-start border-0 border-4 border-info">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center">
-                                        <div>
-                                            <h4 class="my-1 text-info">Customers</h4>
-                                            <p class="mb-0 font-13"><i class='bx bxs-folder'></i> Sundry Debtors</p>
-                                            <p class="mb-0 font-13"><i class='bx bxs-folder'></i> Overdue</p>
+                
+                <div class="col-lg-12">
+                    <div class="col">
+                        <div class="card radius-10 border-start border-0 border-4 border-info">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div>
+                                        <h4 class="my-1 text-info">{{ $ledger->language_name }}</h4>
+                                    </div>
+                                    
+                                    <div class="widgets-icons-2 rounded-circle bg-gradient-blues text-white ms-auto"><i class='bx bxs-cart'></i>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-lg-12">
+                                    <div class="row">
+                                        <div class="col-lg-2">
+                                            <p class="mb-0 font-13 btn btn border-0"><i class='bx bx-folder'></i> {{ $ledger->parent }}</p>
                                         </div>
-                                        <div class="widgets-icons-2 rounded-circle bg-gradient-blues text-white ms-auto"><i class='bx bxs-cart'></i>
+                                        <div class="col-lg-2">
+                                            <p class="btn btn-outline-danger border-1"><i class='lni lni-warning'></i> Overdue</p>
                                         </div>
                                     </div>
-                                    <div class="row p-2">
-                                        <div class="col-lg-8" style="padding: 25px;background: #eee;border-bottom-left-radius: 15px;border-top-left-radius: 15px;">
-                                            <div class="row">
-                                                <div class="col-lg-3">
-                                                    <p class="mb-0 font-13">Total Invoices</p>
-                                                    <h6>31</h6>
-                                                </div>
-                                                <div class="col-lg-3">
-                                                    <p class="mb-0 font-13">Total Invoices</p>
-                                                    <h6>31</h6>
-                                                </div>
-                                                <div class="col-lg-3">
-                                                    <p class="mb-0 font-13">Total Invoices</p>
-                                                    <h6>31</h6>
-                                                </div>
-                                                <div class="col-lg-3">
-                                                    <p class="mb-0 font-13">Total Invoices</p>
-                                                    <h6>31</h6>
-                                                </div>
-                                            </div>
-                                        </div>
+                                </div>
 
-                                        <div class="col-lg-4" style="padding: 25px;background: #e7d9d9;border-bottom-right-radius: 15px;border-top-right-radius: 15px;">
+                                <div class="row p-2">
+                                    <div class="col-lg-9" style="padding: 25px;background: #eee;border-bottom-left-radius: 15px;border-top-left-radius: 15px;">
+                                        <div class="row">
                                             <div class="col-lg-3">
                                                 <p class="mb-0 font-13">Total Invoices</p>
+                                                <h6><h6 id="totalInvoices">0</h6></h6>
+                                            </div>
+                                            <div class="col-lg-3">
+                                                <p class="mb-0 font-13">Opening Balance</p>
                                                 <h6>31</h6>
                                             </div>
+                                            <div class="col-lg-3">
+                                                <p class="mb-0 font-13">Total Debit</p>
+                                                <h6 id="totalDebit"></h6>
+                                            </div>
+                                            <div class="col-lg-3">
+                                                <p class="mb-0 font-13">Total Credit</p>
+                                                <h6 id="totalCredit"></h6>
+                                            </div>
                                         </div>
-
-
                                     </div>
+
+                                    <div class="col-lg-3" style="padding: 25px;background: #e7d9d9;border-bottom-right-radius: 15px;border-top-right-radius: 15px;">
+                                        <div class="col-lg-12">
+                                            <div class="row">
+                                                <div class="col-lg-2">
+                                                    <p class="mb-0 font-13 btn btn border-0"><i class='bx bx-info-circle'></i></p>
+                                                </div>
+                                                <div class="col-lg-10">
+                                                    <p class="mb-0 font-13">Net Outstanding</p>
+                                                    <h6>31(Debit)</h6>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
                                 </div>
+
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <div id="stepper1" class="bs-stepper">
+                    <div class="card">
                     
-
-            </div>
-
-            <div class="email-content">
-                <div class="">
-                    <div class="email-list">
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>Wordpress</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">It is a long established fact that a reader will be distracted by the readable...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">5:56 PM</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>Locanto</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">The point of using Lorem Ipsum is that it has a more-or-less normal...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">5:45 PM</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1 bg-body">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>Facebook</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">There are many variations of passages of Lorem Ipsum available, majority suffered...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">4:32 PM</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>Alex Xender</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">4:25 PM</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>Alisha Mastana</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">4:18 PM</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>Synergy Technology</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">If you are going to use a passage of Lorem Ipsum, you need to be sure there...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">3:56 PM</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>Robina Consultant</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">The standard chunk of Lorem Ipsum used since the 1500s is reproduced below for...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">3:43 PM</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1 bg-body">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>HCl Technologies</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">Bonorum et Malorum" by Cicero are also reproduced in their exact original form...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">2:25 PM</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1 bg-body">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>Tata India</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">But I must explain to you how all this mistaken idea of denouncing pleasure...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">2:14 PM</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1 bg-body">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>Jessica Jhons</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">At vero eos et accusamus et iusto odio dignissimos ducimus...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">1:30 PM</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>Anaxa Marvel</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">1:15 PM</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1 bg-body">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>Maxwell Linga</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">On the other hand, we denounce with righteous indignation and dislike...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">12:45 AM</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>Cricket India</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">Oct 25</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>Start Sports Australia</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">Excepteur sint occaecat cupidatat non proident, sunt in culpa...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">Oct 22</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1 bg-body">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>Diana Dating Services</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">Nor again is there anyone who loves or pursues or desires to obtain pain...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">Oct 18</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1 bg-body">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>Himalaya India</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">Oct 10</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>NASA USA</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">All the Lorem Ipsum generators on the Internet tend to repeat predefined...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">Sep 28</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>Indeed Jobs</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">Content here, content here', making it look like readable English...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">Sep 22</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>Wordfence</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">Various versions have evolved over the years, sometimes by accident...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">Sep 18</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>DocsApp India</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">But I must explain to you how all this mistaken idea of denouncing pleasure...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">Sep 12</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1 bg-body">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>Alex ReliableSoft</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">Sep 02</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1 bg-body">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>Ryan Robinson</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">Business it will frequently occur that pleasures have to be repudiated...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">Aug 22</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>TechGig Job Alert</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">Aug 18</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1 bg-body">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>Paytm India</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">All the Lorem Ipsum generators on the Internet tend to repeat predefined...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">Jul 27</p>
-                                </div>
-                            </div>
-                        </a>
-                        <a href="app-emailread.html">
-                            <div class="d-md-flex align-items-center email-message px-3 py-1">
-                                <div class="d-flex align-items-center email-actions">
-                                    <input class="form-check-input" type="checkbox" value="" /> <i class='bx bx-star font-20 mx-2 email-star'></i>
-                                    <p class="mb-0"><b>Uber America</b>
-                                    </p>
-                                </div>
-                                <div class="">
-                                    <p class="mb-0">Chunks as necessary, making this the first true generator on the Internet...</p>
-                                </div>
-                                <div class="ms-auto">
-                                    <p class="mb-0 email-time">Jul 24</p>
-                                </div>
-                            </div>
-                        </a>
                     </div>
                 </div>
-            </div>
-          
-            <!--start email overlay-->
-            <div class="overlay email-toggle-btn-mobile"></div>
-            <!--end email overlay-->
-        </div>
-        <!--end email wrapper-->
+                
+                <div id="stepper2" class="bs-stepper">
+               
+                      
+                        <div class="card-header">
+                            <div class="d-lg-flex flex-lg-row align-items-lg-center justify-content-lg-between" role="tablist">
+                                <div class="step active" data-target="#test-nl-1">
+                                    <div class="step-trigger" role="tab" id="stepper2trigger1" aria-controls="test-nl-1" aria-selected="true">
+                                    <div class="bs-stepper-circle"><i class="bx bx-user fs-4"></i></div>
+                                    <div class="">
+                                        <h5 class="mb-0 steper-title">Overview</h5>
+                                        {{-- <p class="mb-0 steper-sub-title">Enter Your Details</p> --}}
+                                    </div>
+                                    </div>
+                                </div>
+                                <div class="bs-stepper-line"></div>
+                                <div class="step" data-target="#test-nl-2">
+                                    <div class="step-trigger" role="tab" id="stepper2trigger2" aria-controls="test-nl-2" aria-selected="false">
+                                        <div class="bs-stepper-circle"><i class="bx bx-info-circle fs-4"></i></div>
+                                        <div class="">
+                                            <h5 class="mb-0 steper-title">Info</h5>
+                                        </div>
+                                    </div>
+                                    </div>
+                                <div class="bs-stepper-line"></div>
+                                <div class="step" data-target="#test-nl-3">
+                                    <div class="step-trigger" role="tab" id="stepper2trigger3" aria-controls="test-nl-3" aria-selected="false">
+                                        <div class="bs-stepper-circle"><i class="bx bx-file fs-4"></i></div>
+                                        <div class="">
+                                            <h5 class="mb-0 steper-title">Invoices</h5>
+                                        </div>
+                                    </div>
+                                    </div>
+                                    <div class="bs-stepper-line"></div>
+                                    <div class="step" data-target="#test-nl-4">
+                                        <div class="step-trigger" role="tab" id="stepper2trigger4" aria-controls="test-nl-4" aria-selected="false">
+                                        <div class="bs-stepper-circle"><i class="bx bx-briefcase fs-4"></i></div>
+                                        <div class="">
+                                            <h5 class="mb-0 steper-title">Ledger View</h5>
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+                        </div>
 
+                        <div class="card-body">
+                        
+                            <div class="bs-stepper-content">
+                            <form onsubmit="return false">
+                                <div id="test-nl-1" role="tabpanel" class="bs-stepper-pane active dstepper-block" aria-labelledby="stepper2trigger1">
+                                <h5 class="mb-1">Customer Outstanding</h5>
+    
+                                <div class="row g-3">
+                                    <div class="col-12 col-lg-6">
+                                     
+                                    </div>
+                                </div><!---end row-->
+                                
+                                </div>
+    
+                                <div id="test-nl-2" role="tabpanel" class="bs-stepper-pane" aria-labelledby="stepper2trigger2">
+    
+                                    <h5 class="mb-1">Contact Details</h5>
+        
+                                    <div class="row g-3 pt-4">
+                                        <div class="col-12 col-lg-4">
+                                            <p>E-mail Address</p>
+                                            <p>{{ $ledger->language_name ?? '-' }}</p>
+                                        </div>
+                                        <div class="col-12 col-lg-4">
+                                            <p>Phone Number</p>
+                                            <p>{{ $ledger->language_name ?? '-' }}</p>
+                                        </div>
+                                        <div class="col-12 col-lg-4">
+                                            <p>Address</p>
+                                            <p>{{ $ledger->address ?? '-' }}</p>
+                                        </div>
+                                    </div><!---end row-->
+
+                                    <h5 class="mb-1">Accounting & Taxation</h5>
+    
+                                    <div class="row g-3 pt-4">
+                                        <div class="col-12 col-lg-4">
+                                            <p>GSTIN</p>
+                                            <p>{{ $ledger->gst_in ?? '-' }}</p>
+                                        </div>
+                                    </div><!---end row-->
+
+
+                                    <h5 class="mb-1">Account Details</h5>
+    
+                                    <div class="row g-3 pt-4">
+                                        <div class="col-12 col-lg-4">
+                                            <p>Credit limit</p>
+                                            <p>-</p>
+                                        </div>
+                                        <div class="col-12 col-lg-4">
+                                            <p>Credit Period</p>
+                                            <p>-</p>
+                                        </div>
+                                    </div><!---end row-->
+                                
+                                </div>
+    
+                                <div id="test-nl-3" role="tabpanel" class="bs-stepper-pane" aria-labelledby="stepper2trigger3">
+                                <h5 class="mb-1">Your Education Information</h5>
+                                <p class="mb-4">Inform companies about your education life</p>
+    
+                                <div class="row g-3">
+                                    <div class="col-12 col-lg-6">
+                                        <label for="SchoolName" class="form-label">School Name</label>
+                                        <input type="text" class="form-control" id="SchoolName" placeholder="School Name">
+                                    </div>
+                                    <div class="col-12 col-lg-6">
+                                        <label for="BoardName" class="form-label">Board Name</label>
+                                        <input type="text" class="form-control" id="BoardName" placeholder="Board Name">
+                                    </div>
+                                    <div class="col-12 col-lg-6">
+                                        <label for="UniversityName" class="form-label">University Name</label>
+                                        <input type="text" class="form-control" id="UniversityName" placeholder="University Name">
+                                    </div>
+                                    <div class="col-12 col-lg-6">
+                                        <label for="InputCountry" class="form-label">Course Name</label>
+                                        <select class="form-select" id="InputCountry" aria-label="Default select example">
+                                            <option selected="">---</option>
+                                            <option value="1">One</option>
+                                            <option value="2">Two</option>
+                                            <option value="3">Three</option>
+                                            </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <button class="btn btn-outline-secondary px-4" onclick="stepper2.previous()"><i class="bx bx-left-arrow-alt me-2"></i>Previous</button>
+                                            <button class="btn btn-primary px-4" onclick="stepper2.next()">Next<i class="bx bx-right-arrow-alt ms-2"></i></button>
+                                        </div>
+                                    </div>
+                                </div><!---end row-->
+                                
+                                </div>
+    
+                                <div id="test-nl-4" role="tabpanel" class="bs-stepper-pane" aria-labelledby="stepper2trigger4">
+                                <h5 class="mb-1">Ledger View</h5>
+    
+                                <div class="row g-3 pt-4">
+                                    @include('superadmin.customers._ledger-view', ['ledger' => $ledger])
+                                </div><!---end row-->
+                                
+                                </div>
+                            </form>
+                            </div>
+                            
+                        </div>
+
+                 
+                </div>
+
+            </div>
+        </div>
+
+            
     </div>
 </div>
 @endsection
@@ -490,3 +272,62 @@
 	new PerfectScrollbar('.email-list');
 </script>
 @endpush
+@section("script")
+<script src="{{ asset('assets/plugins/bs-stepper/js/bs-stepper.min.js') }}"></script>
+<script src="{{ asset('assets/plugins/bs-stepper/js/main.js') }}"></script>
+
+<script src="{{ asset('assets/plugins/datatable/js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ asset('assets/plugins/datatable/js/dataTables.bootstrap5.min.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            var table = $('#voucherEntriesTable').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: '{{ route("customers.vouchers", ["customer" => $ledger->guid]) }}',
+                columns: [
+                    { data: 'voucher_date', name: 'voucher_date' },
+                    { data: 'ledger_name', name: 'ledger_name' },
+                    { data: 'voucher_number', name: 'voucher_number' },
+                    { data: 'voucher_type', name: 'voucher_type' },
+                    { data: 'credit', name: 'credit', className: 'text-end' },
+                    { data: 'debit', name: 'debit', className: 'text-end' }
+                ],
+                initComplete: function(settings, json) {
+                    // Update the total count on initialization
+                    $('#totalInvoices').text(json.recordsTotal);
+                },
+                drawCallback: function(settings) {
+                    // Update the total count on each draw (refresh)
+                    $('#totalInvoices').text(settings.json.recordsTotal);
+                },
+                footerCallback: function(row, data, start, end, display) {
+                    var api = this.api();
+
+                    // Calculate total credit and debit
+                    var totalCredit = api.column(4).data().reduce(function(a, b) {
+                        // Ensure that a and b are numbers
+                        a = parseFloat(a) || 0;
+                        b = parseFloat(b) || 0;
+                        return a + b;
+                    }, 0);
+
+                    var totalDebit = api.column(5).data().reduce(function(a, b) {
+                        // Ensure that a and b are numbers
+                        a = parseFloat(a) || 0;
+                        b = parseFloat(b) || 0;
+                        return a + b;
+                    }, 0);
+
+                    // Update footer
+                    $(api.column(4).footer()).html(totalCredit.toFixed(2));
+                    $(api.column(5).footer()).html(totalDebit.toFixed(2));
+
+                    // Update the Total Debit and Total Credit sections
+                    $('#totalDebit').text(totalDebit.toFixed(2));
+                    $('#totalCredit').text(totalCredit.toFixed(2));
+                }
+
+            });
+        });
+    </script>     
+@endsection
