@@ -14,29 +14,29 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <!--favicon-->
-        <link rel="icon" href="{{ asset('assets/images/favicon-32x32.png') }}" type="image/png" />
+        <link rel="icon" href="{{ url('assets/images/favicon-32x32.png') }}" type="image/png" />
         <!--plugins-->
         @yield("style")
-        <link href="{{ asset('assets/plugins/simplebar/css/simplebar.css') }}" rel="stylesheet" />
-        <link href="{{ asset('assets/plugins/perfect-scrollbar/css/perfect-scrollbar.css') }}" rel="stylesheet" />
-        <link href="{{ asset('assets/plugins/metismenu/css/metisMenu.min.css') }}" rel="stylesheet" />
+        <link href="{{ url('assets/plugins/simplebar/css/simplebar.css') }}" rel="stylesheet" />
+        <link href="{{ url('assets/plugins/perfect-scrollbar/css/perfect-scrollbar.css') }}" rel="stylesheet" />
+        <link href="{{ url('assets/plugins/metismenu/css/metisMenu.min.css') }}" rel="stylesheet" />
         <!-- loader-->
-        <link href="{{ asset('assets/css/pace.min.css') }}" rel="stylesheet" />
-        <script src="{{ asset('assets/js/pace.min.js') }}"></script>
+        <link href="{{ url('assets/css/pace.min.css') }}" rel="stylesheet" />
+        <script src="{{ url('assets/js/pace.min.js') }}"></script>
         <!-- Bootstrap CSS -->
-        <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet">
-        <link href="{{ asset('assets/css/bootstrap-extended.css') }}" rel="stylesheet">
+        <link href="{{ url('assets/css/bootstrap.min.css') }}" rel="stylesheet">
+        <link href="{{ url('assets/css/bootstrap-extended.css') }}" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-        <link href="{{ asset('assets/css/app.css') }}" rel="stylesheet">
-        <link href="{{ asset('assets/css/icons.css') }}" rel="stylesheet">
-        <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet">
+        <link href="{{ url('assets/css/app.css') }}" rel="stylesheet">
+        <link href="{{ url('assets/css/icons.css') }}" rel="stylesheet">
+        <link href="{{ url('assets/css/custom.css') }}" rel="stylesheet">
 
         
 
         <!-- Theme Style CSS -->
-        <link rel="stylesheet" href="{{ asset('assets/css/dark-theme.css') }}" />
-        <link rel="stylesheet" href="{{ asset('assets/css/semi-dark.css') }}" />
-        <link rel="stylesheet" href="{{ asset('assets/css/header-colors.css') }}" />
+        <link rel="stylesheet" href="{{ url('assets/css/dark-theme.css') }}" />
+        <link rel="stylesheet" href="{{ url('assets/css/semi-dark.css') }}" />
+        <link rel="stylesheet" href="{{ url('assets/css/header-colors.css') }}" />
 
         @stack('css')
         <!-- Styles -->
@@ -53,6 +53,8 @@
 		<!--end navigation-->
 		<!--start page wrapper -->
 		@yield("wrapper")
+        {{ $slot }}
+        @livewireScripts
 		<!--end page wrapper -->
         <!-- Search Modal -->
         @include("layouts.partials.search-modal")
@@ -135,17 +137,17 @@
 	<!-- Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-	<script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}"></script>
+	<script src="{{ url('assets/js/bootstrap.bundle.min.js') }}"></script>
 	<!--plugins-->
 	{{-- <script src="{{ asset('assets/js/jquery.min.js') }}"></script> --}}
-	<script src="{{ asset('assets/plugins/simplebar/js/simplebar.min.js') }}"></script>
-	<script src="{{ asset('assets/plugins/metismenu/js/metisMenu.min.js') }}"></script>
-	<script src="{{ asset('assets/plugins/perfect-scrollbar/js/perfect-scrollbar.js') }}"></script>
+	<script src="{{ url('assets/plugins/simplebar/js/simplebar.min.js') }}"></script>
+	<script src="{{ url('assets/plugins/metismenu/js/metisMenu.min.js') }}"></script>
+	<script src="{{ url('assets/plugins/perfect-scrollbar/js/perfect-scrollbar.js') }}"></script>
 	<!--app JS-->
-	<script src="{{ asset('assets/js/app.js') }}"></script>
+	<script src="{{ url('assets/js/app.js') }}"></script>
 
-    <script src="{{ asset('assets/js/custom.js') }}"></script>
-    <script src="{{ asset('vendor/notifier/bootstrap-notify.min.js') }}"></script>
+    <script src="{{ url('assets/js/custom.js') }}"></script>
+    <script src="{{ url('vendor/notifier/bootstrap-notify.min.js') }}"></script>
 	@yield("script")
     @stack('javascript')
     @include('layouts.includes.alerts')

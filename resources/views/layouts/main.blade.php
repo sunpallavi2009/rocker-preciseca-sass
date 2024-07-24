@@ -1,119 +1,154 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui" />
- 
-    <title>@yield('title', 'Preciseca')</title>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <link rel="icon" href="{{ asset('assets/images/logo/app-favicon-logo.png') }}" type="image/png">
+        <title>@yield('title', 'Preciseca')</title>
 
-    {{-- @vite(['resources/css/app.css', 'resources/js/app.js']) --}}
+        <!-- Fonts -->
+        <link rel="stylesheet" href="https://fonts.bunny.net/css2?family=Nunito:wght@400;600;700&display=swap">
 
-    @stack('css')
-</head>
+        <!-- Scripts -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!--favicon-->
+        <link rel="icon" href="{{ url('assets/images/favicon-32x32.png') }}" type="image/png" />
+        <!--plugins-->
+        @yield("style")
+        <link href="{{ url('assets/plugins/simplebar/css/simplebar.css') }}" rel="stylesheet" />
+        <link href="{{ url('assets/plugins/perfect-scrollbar/css/perfect-scrollbar.css') }}" rel="stylesheet" />
+        <link href="{{ url('assets/plugins/metismenu/css/metisMenu.min.css') }}" rel="stylesheet" />
+        <!-- loader-->
+        <link href="{{ url('assets/css/pace.min.css') }}" rel="stylesheet" />
+        <script src="{{ url('assets/js/pace.min.js') }}"></script>
+        <!-- Bootstrap CSS -->
+        <link href="{{ url('assets/css/bootstrap.min.css') }}" rel="stylesheet">
+        <link href="{{ url('assets/css/bootstrap-extended.css') }}" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+        <link href="{{ url('assets/css/app.css') }}" rel="stylesheet">
+        <link href="{{ url('assets/css/icons.css') }}" rel="stylesheet">
+        <link href="{{ url('assets/css/custom.css') }}" rel="stylesheet">
 
-<body class="">
-    <div class="loader-bg">
-        <div class="loader-track">
-            <div class="loader-fill"></div>
+        
+
+        <!-- Theme Style CSS -->
+        <link rel="stylesheet" href="{{ url('assets/css/dark-theme.css') }}" />
+        <link rel="stylesheet" href="{{ url('assets/css/semi-dark.css') }}" />
+        <link rel="stylesheet" href="{{ url('assets/css/header-colors.css') }}" />
+
+        @stack('css')
+        <!-- Styles -->
+        @livewireStyles
+    </head>
+    <body class="font-sans antialiased">
+        	<!--wrapper-->
+	<div class="wrapper">
+		<!--start header -->
+		@include("layouts.partials.header")
+		<!--end header -->
+		<!--navigation-->
+		@include("layouts.partials.nav")
+		<!--end navigation-->
+		<!--start page wrapper -->
+		@yield("wrapper")
+		<!--end page wrapper -->
+        <!-- Search Modal -->
+        @include("layouts.partials.search-modal")
+        <!-- End Search Model -->
+		<!--start overlay-->
+		<div class="overlay toggle-icon"></div>
+		<!--end overlay-->
+		<!--Start Back To Top Button--> <a href="javaScript:;" class="back-to-top"><i class='bx bxs-up-arrow-alt'></i></a>
+		<!--End Back To Top Button-->
+		<footer class="page-footer">
+			<p class="mb-0">Copyright © {{ date("Y") }}. All right reserved.</p>
+		</footer>
+	</div>
+	<!--end wrapper-->
+    <!--start switcher-->
+    <div class="switcher-wrapper">
+        <div class="switcher-btn"> <i class='bx bx-cog bx-spin'></i>
         </div>
-    </div>
-
-
-    @include('layouts.sidebar')
-
-
-    @include('layouts.header')
-
-    <div class="dash-container">
-        <div class="dash-content">
-            <!-- [ breadcrumb ] start -->
-            <div class="page-header">
-                <div class="page-block">
-                    <div class="row align-items-center">
-                        <div class="col-auto">
-                            <div class="page-header-title">
-                                <h4 class="m-b-10">@yield('title')</h4>
-                            </div>
-                            <ul class="breadcrumb">
-                                @yield('breadcrumb')
-                            </ul>
-                        </div>
-
-                        <div class="col">
-                            @yield('action-btn')
-                        </div>
+        <div class="switcher-body">
+            <div class="d-flex align-items-center">
+                <h5 class="mb-0 text-uppercase">Theme Customizer</h5>
+                <button type="button" class="btn-close ms-auto close-switcher" aria-label="Close"></button>
+            </div>
+            <hr/>
+            <h6 class="mb-0">Theme Styles</h6>
+            <hr/>
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="flexRadioDefault" id="lightmode" checked>
+                    <label class="form-check-label" for="lightmode">Light</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="flexRadioDefault" id="darkmode">
+                    <label class="form-check-label" for="darkmode">Dark</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="flexRadioDefault" id="semidark">
+                    <label class="form-check-label" for="semidark">Semi Dark</label>
+                </div>
+            </div>
+            <hr/>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" id="minimaltheme" name="flexRadioDefault">
+                <label class="form-check-label" for="minimaltheme">Minimal Theme</label>
+            </div>
+            <hr/>
+            <h6 class="mb-0">Header Colors</h6>
+            <hr/>
+            <div class="header-colors-indigators">
+                <div class="row row-cols-auto g-3">
+                    <div class="col">
+                        <div class="indigator headercolor1" id="headercolor1"></div>
+                    </div>
+                    <div class="col">
+                        <div class="indigator headercolor2" id="headercolor2"></div>
+                    </div>
+                    <div class="col">
+                        <div class="indigator headercolor3" id="headercolor3"></div>
+                    </div>
+                    <div class="col">
+                        <div class="indigator headercolor4" id="headercolor4"></div>
+                    </div>
+                    <div class="col">
+                        <div class="indigator headercolor5" id="headercolor5"></div>
+                    </div>
+                    <div class="col">
+                        <div class="indigator headercolor6" id="headercolor6"></div>
+                    </div>
+                    <div class="col">
+                        <div class="indigator headercolor7" id="headercolor7"></div>
+                    </div>
+                    <div class="col">
+                        <div class="indigator headercolor8" id="headercolor8"></div>
                     </div>
                 </div>
             </div>
-            <!-- [ breadcrumb ] end -->
-            <!-- [ Main Content ] start -->
-            <div class="row">
-                <!-- [ sample-page ] start -->
-                <div class="col-sm-12">
-                    @yield('content')
-                </div>
-                <!-- [ sample-page ] end -->
-            </div>
-            <!-- [ Main Content ] end -->
         </div>
     </div>
+    <!--end switcher-->
+	<!-- Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <div class="modal fade modal-animate anim-blur" id="common_modal" tabindex="-1" role="dialog"
-        aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel"></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="body"></div>
-            </div>
-        </div>
-    </div>
+	<script src="{{ url('assets/js/bootstrap.bundle.min.js') }}"></script>
+	<!--plugins-->
+	{{-- <script src="{{ asset('assets/js/jquery.min.js') }}"></script> --}}
+	<script src="{{ url('assets/plugins/simplebar/js/simplebar.min.js') }}"></script>
+	<script src="{{ url('assets/plugins/metismenu/js/metisMenu.min.js') }}"></script>
+	<script src="{{ url('assets/plugins/perfect-scrollbar/js/perfect-scrollbar.js') }}"></script>
+	<!--app JS-->
+	<script src="{{ url('assets/js/app.js') }}"></script>
 
-    <div class="modal fade modal-animate anim-blur" id="common_modal1" tabindex="-1" role="dialog"
-        aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel"></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="pt-5 modal-body px-xl-20">
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    @include('layouts.footer')
-
-    <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
-    <script src="{{ asset('assets/js/plugins/popper.min.js') }}"></script>
-    <script src="{{ asset('assets/js/plugins/perfect-scrollbar.min.js') }}"></script>
-    {{-- tostr notification close --}}
-    <script src="{{ asset('assets/js/plugins/bootstrap.min.js') }}"></script>
-    <script src="{{ asset('assets/js/plugins/feather.min.js') }}"></script>
-    {{-- sidebar active deactive menu --}}
-    <script src="{{ asset('assets/js/dash.js') }}"></script>
-    {{-- Form-validation  --}}
-    <script src="{{ asset('assets/js/plugins/bouncer.min.js') }}"></script>
-    <script src="{{ asset('assets/js/plugins/form-validation.js') }}"></script>
-    {{-- notification , alert pop-up --}}
-    <script src="{{ asset('assets/js/plugins/sweetalert2.all.min.js') }}"></script>
-    <script src="{{ asset('vendor/notifier/bootstrap-notify.min.js') }}"></script>
-    {{-- toggle button --}}
-    <script src="{{ asset('assets/js/plugins/bootstrap-switch-button.min.js') }}"></script>
-    <script src="{{ asset('assets/js/custom.js') }}"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-
-
+    <script src="{{ url('assets/js/custom.js') }}"></script>
+    <script src="{{ url('vendor/notifier/bootstrap-notify.min.js') }}"></script>
+	@yield("script")
+    @stack('javascript')
     @include('layouts.includes.alerts')
 
-    @stack('javascript')
-
-</body>
-
+    </body>
 </html>

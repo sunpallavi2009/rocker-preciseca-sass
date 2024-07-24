@@ -1,4 +1,4 @@
-@extends("layouts.app")
+@extends("layouts.main")
 @section('title', __('Customers | Preciseca'))
 @section("wrapper")
     <div class="page-wrapper">

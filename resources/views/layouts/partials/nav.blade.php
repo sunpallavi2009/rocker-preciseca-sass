@@ -59,6 +59,16 @@
             </li>
 
             <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle dropdown-toggle-nocaret {{ request()->routeIs('otherCustomers.index') ? 'active' : '' }}" href="{{ route('otherCustomers.index') }}">
+                  <div class="parent-icon"><i class='bx bx-group'></i>
+                  </div>
+                  <div class="menu-title d-flex align-items-center">Other Customers</div>
+                  {{-- <div class="ms-auto dropy-icon"><i class='bx bx-chevron-down'></i></div> --}}
+              </a>
+            </li>
+
+
+            <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle dropdown-toggle-nocaret {{ request()->routeIs('suppliers.index') ? 'active' : '' }}" href="{{ route('suppliers.index') }}">
                   <div class="parent-icon"><i class='bx bx-cube'></i>
                   </div>
@@ -67,6 +77,7 @@
               </a>
             </li>
 
+            
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle dropdown-toggle-nocaret {{ request()->routeIs('stock-items.index') ? 'active' : '' }}" href="{{ route('stock-items.index') }}">
                   <div class="parent-icon"><i class='bx bx-box'></i>

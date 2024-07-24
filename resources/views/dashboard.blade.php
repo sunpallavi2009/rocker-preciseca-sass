@@ -1,4 +1,4 @@
-@extends("layouts.app")
+@extends("layouts.main")
 @section('title', __('Dashboard | Preciseca'))
 @section("style")
     <link href="assets/plugins/vectormap/jquery-jvectormap-2.0.2.css" rel="stylesheet"/>

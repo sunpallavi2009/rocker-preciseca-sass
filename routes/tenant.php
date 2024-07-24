@@ -7,9 +7,7 @@ use Laravel\Jetstream\Jetstream;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TenantHomeController;
-use App\Http\Controllers\App\CompanyController;
-use App\Http\Controllers\App\PartyMasterController;
-use App\Http\Controllers\App\ItemController;
+use App\Http\Controllers\SuperAdmin\CustomerController;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Laravel\Sanctum\Http\Controllers\CsrfCookieController;
 use Laravel\Jetstream\Http\Controllers\CurrentTeamController;
@@ -64,16 +62,13 @@ Route::middleware([
 
         Route::get('/dashboard', [TenantHomeController::class, 'index'])->name('dashboard');
 
-        Route::resource('companies', CompanyController::class);
-        Route::get('/fetch-company-data', [CompanyController::class, 'fetchAndStore'])->name('companies.fetchAndStore');
-
-        Route::resource('partymaster', PartyMasterController::class);
-        Route::get('/fetch-partymaster-data', [PartyMasterController::class, 'fetchAndStore'])->name('partymaster.fetchAndStore');
-
-        Route::resource('items', ItemController::class);
-        Route::get('/fetch-item-data', [ItemController::class, 'fetchAndStore'])->name('items.fetchAndStore');
-
         Route::resource('gstAuth', GstAuthController::class);
+
+
+        //customers records display
+        Route::resource('customers', CustomerController::class);
+        Route::get('customers/{customer}/vouchers', [CustomerController::class, 'getVoucherEntries'])->name('customers.vouchers');
+    
 
         //  JET STREAM
         require __DIR__ . '/jetstream.php';

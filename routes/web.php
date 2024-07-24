@@ -63,6 +63,9 @@ Route::middleware([
     Route::resource('customers', CustomerController::class);
     Route::get('customers/{customer}/vouchers', [CustomerController::class, 'getVoucherEntries'])->name('customers.vouchers');
 
+    Route::get('otherCustomers', [CustomerController::class, 'otherCustomers'])->name('otherCustomers.index');
+
+
     Route::resource('suppliers', SupplierController::class);
     Route::resource('stock-items', StockItemController::class);
 
@@ -71,15 +74,7 @@ Route::middleware([
 
     Route::resource('users', UserController::class);
 
-
-    Route::resource('tally', TallyController::class);
     
-    Route::get('jsonImport/ledger/show', [TallyController::class,'ledgerShow'])->name('jsonImport.ledger.show');
-
-    Route::get('jsonImport/otherLedger/show', [TallyController::class,'otherLedgerShow'])->name('jsonImport.otherledger.show');
-
-    Route::get('jsonImport/stockItem/show', [TallyController::class,'stockItemShow'])->name('jsonImport.stockitem.show');
-
     //  JET STREAM
     require __DIR__ . '/auth.php';
 });

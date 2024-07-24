@@ -68,4 +68,5 @@ class User extends Authenticatable
     {
         return is_null(tenant('id')) ? config('tenancy.database.central_connection')  : 'tenant';
     }
+
 }

@@ -1,8 +1,8 @@
-@extends("layouts.app")
+@extends("layouts.main")
 @section('title', __('Customers | Preciseca'))
 @section("style")
-<link href="{{ asset('assets/plugins/bs-stepper/css/bs-stepper.css') }}" rel="stylesheet" />
-<link href="{{ asset('assets/plugins/datatable/css/dataTables.bootstrap5.min.css') }}" rel="stylesheet" />
+<link href="{{ url('assets/plugins/bs-stepper/css/bs-stepper.css') }}" rel="stylesheet" />
+<link href="{{ url('assets/plugins/datatable/css/dataTables.bootstrap5.min.css') }}" rel="stylesheet" />
 @endsection
 @section("wrapper")
     <div class="page-wrapper">
@@ -108,7 +108,7 @@
                             <div class="d-lg-flex flex-lg-row align-items-lg-center justify-content-lg-between" role="tablist">
                                 <div class="step active" data-target="#test-nl-1">
                                     <div class="step-trigger" role="tab" id="stepper2trigger1" aria-controls="test-nl-1" aria-selected="true">
-                                    <div class="bs-stepper-circle"><i class="bx bx-user fs-4"></i></div>
+                                    <div class="bs-stepper-circle"><i class="bx bx-file-find fs-4"></i></div>
                                     <div class="">
                                         <h5 class="mb-0 steper-title">Overview</h5>
                                         {{-- <p class="mb-0 steper-sub-title">Enter Your Details</p> --}}
@@ -273,11 +273,11 @@
 </script>
 @endpush
 @section("script")
-<script src="{{ asset('assets/plugins/bs-stepper/js/bs-stepper.min.js') }}"></script>
-<script src="{{ asset('assets/plugins/bs-stepper/js/main.js') }}"></script>
+<script src="{{ url('assets/plugins/bs-stepper/js/bs-stepper.min.js') }}"></script>
+<script src="{{ url('assets/plugins/bs-stepper/js/main.js') }}"></script>
 
-<script src="{{ asset('assets/plugins/datatable/js/jquery.dataTables.min.js') }}"></script>
-    <script src="{{ asset('assets/plugins/datatable/js/dataTables.bootstrap5.min.js') }}"></script>
+<script src="{{ url('assets/plugins/datatable/js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url('assets/plugins/datatable/js/dataTables.bootstrap5.min.js') }}"></script>
     <script>
         $(document).ready(function() {
             var table = $('#voucherEntriesTable').DataTable({

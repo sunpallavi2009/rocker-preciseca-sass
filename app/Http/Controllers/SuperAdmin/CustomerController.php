@@ -11,11 +11,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log; 
 use App\DataTables\SuperAdmin\CustomerDataTable;
+use App\DataTables\SuperAdmin\OtherCustomerDataTable;
+use Stancl\Tenancy\Facades\Tenancy;
 
 class CustomerController extends Controller
 {
-
     public function index(CustomerDataTable $dataTable)
+    {
+        return $dataTable->render('superadmin.customers.index');
+    }
+
+    public function otherCustomers(OtherCustomerDataTable $dataTable)
     {
         return $dataTable->render('superadmin.customers.index');
     }

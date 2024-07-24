@@ -1,4 +1,4 @@
-<x-jet-action-section>
+<x-jet-action-section class="mt-5">
     <x-slot name="title">
         {{ __('Browser Sessions') }}
     </x-slot>
@@ -52,18 +52,18 @@
         @endif
 
         <div class="flex items-center mt-5">
-            <x-jet-button wire:click="confirmLogout" wire:loading.attr="disabled">
+            <x-jet-button wire:click="confirmLogout" wire:loading.attr="disabled" class="btn btn-primary">
                 {{ __('Log Out Other Browser Sessions') }}
             </x-jet-button>
 
-            <x-jet-action-message class="ml-3" on="loggedOut">
+            <x-jet-action-message class="ml-3" on="loggedOut" class="btn btn-primary">
                 {{ __('Done.') }}
             </x-jet-action-message>
         </div>
 
         <!-- Log Out Other Devices Confirmation Modal -->
         <x-jet-dialog-modal wire:model="confirmingLogout">
-            <x-slot name="title">
+            <x-slot name="title" class="btn btn-primary">
                 {{ __('Log Out Other Browser Sessions') }}
             </x-slot>
 

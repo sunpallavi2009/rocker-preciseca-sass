@@ -1,17 +1,10 @@
-
-<style>
-    .mt-5{
-        margin-top: -2% !important;
-    }
-</style>
-
 <x-jet-form-section submit="updateProfileInformation">
     <x-slot name="title">
-        {{-- {{ __('Profile Information') }} --}}
+        {{ __('Profile Information') }}
     </x-slot>
 
     <x-slot name="description">
-        {{-- {{ __('Update your account\'s profile information and email address.') }} --}}
+        {{ __('Update your account\'s profile information and email address.') }}
     </x-slot>
 
     <x-slot name="form">
@@ -58,27 +51,20 @@
                 <x-jet-input-error for="photo" class="mt-2" />
             </div>
         @endif
-        {{-- @dd($state) --}}
+
+            
         <!-- Name -->
-        <div class="row mb-3">
-            <div class="col-sm-3">
-                <x-jet-label class="mb-0" for="name" value="{{ __('Full Name') }}" />
-            </div>
-            <div class="col-sm-9 text-secondary">
-                <x-jet-input id="name" type="text" name="name" class="form-control" value="{{ old('name', $state['name']) }}" wire:model.defer="state.name" autocomplete="name" />
-                <x-jet-input-error for="name" class="mt-2" />
-            </div>
+        <div class="col-span-6 sm:col-span-4 mb-3">
+            <x-jet-label for="name" class="form-label" value="{{ __('Name') }}" />
+            <x-jet-input id="name" type="text" class="form-control mt-1 block w-full" wire:model.defer="state.name" autocomplete="name" />
+            <x-jet-input-error for="name" class="mt-2" />
         </div>
 
         <!-- Email -->
-        <div class="row mb-3">
-            <div class="col-sm-3">
-                <x-jet-label class="mb-0" for="email" value="{{ __('Email') }}" />
-            </div>
-            <div class="col-sm-9 text-secondary">
-                <x-jet-input id="email" type="email" name="email" class="form-control" wire:model.defer="state.email"  value="{{ old('email', $state['email']) }}"/>
-                <x-jet-input-error for="email" class="mt-2" />
-            </div>
+        <div class="col-span-6 sm:col-span-4 mb-3">
+            <x-jet-label for="email" class="form-label" value="{{ __('Email') }}" />
+            <x-jet-input id="email" type="email" class="form-control mt-1 block w-full" wire:model.defer="state.email" />
+            <x-jet-input-error for="email" class="mt-2" />
 
             @if (Laravel\Fortify\Features::enabled(Laravel\Fortify\Features::emailVerification()) && ! $this->user->hasVerifiedEmail())
                 <p class="text-sm mt-2">
@@ -96,20 +82,16 @@
                 @endif
             @endif
         </div>
+
     </x-slot>
 
     <x-slot name="actions">
-        <div class="row">
-            <div class="col-sm-3"></div>
-                <div class="col-sm-9 text-secondary">
-                        <x-jet-action-message class="mr-3" on="saved"  class="btn btn-primary px-4">
-                            {{ __('Saved.') }}
-                        </x-jet-action-message>
+        <x-jet-action-message class="btn btn-primary mr-3" on="saved">
+            {{ __('Saved.') }}
+        </x-jet-action-message>
 
-                        <x-jet-button wire:loading.attr="disabled" wire:target="photo"  class="btn btn-primary px-4">
-                            {{ __('Save Changes') }}
-                        </x-jet-button>
-                </div>
-        </div>
+        <x-jet-button wire:loading.attr="disabled" wire:target="photo" class="btn btn-primary">
+            {{ __('Save') }}
+        </x-jet-button>
     </x-slot>
 </x-jet-form-section>
