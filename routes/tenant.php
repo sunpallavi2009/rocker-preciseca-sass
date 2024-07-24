@@ -7,7 +7,6 @@ use Laravel\Jetstream\Jetstream;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TenantHomeController;
-use App\Http\Controllers\SuperAdmin\CustomerController;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Laravel\Sanctum\Http\Controllers\CsrfCookieController;
 use Laravel\Jetstream\Http\Controllers\CurrentTeamController;
@@ -64,11 +63,6 @@ Route::middleware([
 
         Route::resource('gstAuth', GstAuthController::class);
 
-
-        //customers records display
-        Route::resource('customers', CustomerController::class);
-        Route::get('customers/{customer}/vouchers', [CustomerController::class, 'getVoucherEntries'])->name('customers.vouchers');
-    
 
         //  JET STREAM
         require __DIR__ . '/jetstream.php';
