@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('tally_voucher_entries', function (Blueprint $table) {
+        Schema::create('tally_voucher_heads', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('tally_voucher_id')->nullable();
             $table->foreign('tally_voucher_id')->references('id')->on('tally_vouchers')->onDelete('cascade');
@@ -32,6 +32,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('tally_voucher_entries');
+        Schema::dropIfExists('tally_voucher_heads');
     }
 };

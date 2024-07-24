@@ -5,7 +5,7 @@ namespace App\Http\Controllers\SuperAdmin;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use App\Models\TallyLedger;
-use App\Models\TallyVoucherEntry;
+use App\Models\TallyVoucherHead;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -36,11 +36,11 @@ class CustomerController extends Controller
     public function getVoucherEntries($customer)
     {
         $ledger = TallyLedger::where('guid', $customer)->firstOrFail();
-        $voucherEntries = TallyVoucherEntry::where('ledger_guid', $ledger->guid)
-            ->with('voucherEntry') // Load the related TallyVoucher entries
+        $voucherHeads = TallyVoucherHead::where('ledger_guid', $ledger->guid)
+            ->with('voucherHead') // Load the related TallyVoucher entries
             ->get();
         
-        return datatables()->of($voucherEntries)
+        return datatables()->of($voucherHeads)
             ->addColumn('credit', function ($entry) {
                 return $entry->entry_type == 'credit' ? number_format(abs($entry->amount), 2, '.', '') : '0.00';
             })
@@ -48,13 +48,13 @@ class CustomerController extends Controller
                 return $entry->entry_type == 'debit' ? number_format(abs($entry->amount), 2, '.', '') : '0.00';
             })
             ->addColumn('voucher_number', function ($entry) {
-                return $entry->voucherEntry ? $entry->voucherEntry->voucher_number : '';
+                return $entry->voucherHead ? $entry->voucherHead->voucher_number : '';
             })
             ->addColumn('voucher_type', function ($entry) {
-                return $entry->voucherEntry ? $entry->voucherEntry->voucher_type : '';
+                return $entry->voucherHead ? $entry->voucherHead->voucher_type : '';
             })
             ->addColumn('voucher_date', function ($entry) {
-                return $entry->voucherEntry ? $entry->voucherEntry->voucher_date : '';
+                return $entry->voucherHead ? $entry->voucherHead->voucher_date : '';
             })
             ->make(true);
     }

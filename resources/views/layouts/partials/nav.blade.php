@@ -22,7 +22,8 @@
                 {{-- <div class="ms-auto dropy-icon"><i class='bx bx-chevron-down'></i></div> --}}
             </a>
           </li>
-             <li class="nav-item dropdown">
+
+            {{-- <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" href="javascript:;" data-bs-toggle="dropdown">
                   <div class="parent-icon"><i class='bx bx-cube'></i>
                   </div>
@@ -37,17 +38,8 @@
                       <li><a class="dropdown-item" href="{{ route('tenants.index') }}"><i class='bx bx-radio-circle'></i>Tenant list</a></li>
                     </ul>
                 </li>
-                <li class="nav-item dropend">
-                  <a class="dropdown-item dropdown-toggle dropdown-toggle-nocaret" href="javascript:;"><i class='bx bx-file'></i>Tally list</a>
-                  <ul class="dropdown-menu submenu">
-                      {{-- <li><a class="dropdown-item" href="{{ route('tally.index') }}"><i class='bx bx-radio-circle'></i>Group list</a></li>
-                      <li><a class="dropdown-item" href="{{ route('jsonImport.ledger.show') }}"><i class='bx bx-radio-circle'></i>Ledger list</a></li>
-                      <li><a class="dropdown-item" href="{{ route('jsonImport.otherledger.show') }}"><i class='bx bx-radio-circle'></i>Other Ledger list</a></li>
-                      <li><a class="dropdown-item" href="{{ route('jsonImport.stockitem.show') }}"><i class='bx bx-radio-circle'></i>Stock Item list</a></li> --}}
-                    </ul>
-                </li>
               </ul>
-            </li>
+            </li> --}}
 
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle dropdown-toggle-nocaret {{ request()->routeIs('customers.index') ? 'active' : '' }}" href="{{ route('customers.index') }}">

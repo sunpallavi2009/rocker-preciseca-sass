@@ -56,3 +56,6 @@ Start Date : 13-07-2024
 * composer require laravel/breeze --dev
 * php artisan breeze:install
 * Run `php artisan migrate`
+
+* protected $connection = 'mysql'; add these line to model if you want to display a that 
+  table to subdomain tenant

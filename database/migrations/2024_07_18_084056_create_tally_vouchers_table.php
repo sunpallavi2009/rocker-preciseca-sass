@@ -26,6 +26,9 @@ return new class extends Migration
             $table->string('place_of_supply')->nullable();
             $table->string('country_of_residense')->nullable();
             $table->string('gst_registration_type')->nullable();
+            $table->string('narration')->nullable();
+            $table->string('cost_center_name')->nullable();
+            $table->string('cost_center_amount')->nullable();
             $table->string('numbering_style')->nullable();
             $table->timestamps();
         });
