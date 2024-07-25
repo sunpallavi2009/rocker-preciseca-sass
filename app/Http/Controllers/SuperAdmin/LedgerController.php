@@ -15,61 +15,85 @@ use App\Models\TallyGodown;
 use App\Models\TallyVoucher;
 use App\Models\TallyVoucherHead;
 use App\Models\TallyVoucherItem;
+use App\Models\TallyBillAllocation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log; 
 
 class LedgerController extends Controller
 {
-
+    private function findTallyMessage($jsonArray, $path = '') {
+        foreach ($jsonArray as $key => $value) {
+            $currentPath = $path ? $path . '.' . $key : $key;
+            if ($key === 'TALLYMESSAGE') {
+                return ['path' => $currentPath, 'value' => $value];
+            }
+            if (is_array($value)) {
+                $result = $this->findTallyMessage($value, $currentPath);
+                if ($result !== null) {
+                    return $result;
+                }
+            }
+        }
+        return null;
+    }
+    
     public function companyJsonImport(Request $request)
     {
         try {
+            // Fetch and store the incoming JSON data
             $jsonData = $request->getContent();
             $fileName = 'tally_company_data_' . date('YmdHis') . '.json';
             $jsonFilePath = storage_path('app/' . $fileName);
             file_put_contents($jsonFilePath, $jsonData);
             $jsonData = file_get_contents($jsonFilePath);
             $data = json_decode($jsonData, true);
-
-            if (!isset($data['ENVELOPE']['BODY']['IMPORTDATA']['REQUESTDATA']['TALLYMESSAGE'])) {
-                throw new \Exception('Invalid JSON structure.');
+    
+            // Find TALLYMESSAGE key in the JSON data
+            $result = $this->findTallyMessage($data);
+    
+            if ($result === null) {
+                throw new \Exception('TALLYMESSAGE key not found in the JSON data.');
             }
-
-            $messages = $data['ENVELOPE']['BODY']['IMPORTDATA']['REQUESTDATA']['TALLYMESSAGE'];
-
-            //Track company GUIDs to ensure they are inserted only once
+    
+            $messagesPath = $result['path'];
+            $messages = $result['value'];
+    
+            // Process TALLYMESSAGE array
+            // Track company GUIDs to ensure they are inserted only once
             $companyGuids = TallyCompany::pluck('guid')->toArray();
             Log::info('Company GUIDs in Database:', ['companyGuids' => $companyGuids]);
-
+    
             foreach ($messages as $message) {
+                // Handle company data
                 if (isset($message['COMPANY'])) {
                     $companyData = $message['COMPANY']['REMOTECMPINFO.LIST'];
                     $companyGuid = $companyData['NAME'];
-
+    
                     if (!in_array($companyGuid, $companyGuids)) {
                         $company = TallyCompany::create([
                             'guid' => $companyGuid,
                             'name' => $companyData['REMOTECMPNAME'] ?? null,
                             'state' => $companyData['REMOTECMPSTATE'] ?? null,
                         ]);
-
+    
                         if (!$company) {
                             throw new \Exception('Failed to create tally company record.');
                         }
-
+    
                         $companyGuids[] = $companyGuid;
                     }
                 }
             }
-            
-            return response()->json(['message' => 'Tally data saved successfully.']);
-
+    
+            return response()->json(['message' => 'Tally data saved successfully.', 'path' => $messagesPath]);
+    
         } catch (\Exception $e) {
             Log::error('Error importing data: ' . $e->getMessage());
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
- 
+    
+
     public function masterJsonImport(Request $request)
     {
         try {
@@ -80,11 +104,15 @@ class LedgerController extends Controller
             $jsonData = file_get_contents($jsonFilePath);
             $data = json_decode($jsonData, true);
 
-            if (!isset($data['ENVELOPE']['BODY']['IMPORTDATA']['REQUESTDATA']['TALLYMESSAGE'])) {
-                throw new \Exception('Invalid JSON structure.');
+            // Determine the structure of the JSON and extract messages accordingly
+            $result = $this->findTallyMessage($data);
+
+            if ($result === null) {
+                throw new \Exception('TALLYMESSAGE key not found in the JSON data.');
             }
 
-            $messages = $data['ENVELOPE']['BODY']['IMPORTDATA']['REQUESTDATA']['TALLYMESSAGE'];
+            $messagesPath = $result['path'];
+            $messages = $result['value'];
 
             foreach ($messages as $message) {
                 if (isset($message['GROUP'])) {
@@ -99,7 +127,6 @@ class LedgerController extends Controller
                     if (is_array($nameField)) {
                         $nameField = implode(', ', $nameField);
                     }
-                    
 
                     $tallyGroup = TallyGroup::updateOrCreate(
                         ['guid' => $guid],
@@ -123,92 +150,82 @@ class LedgerController extends Controller
                     $ledgerData = $message['LEDGER'];
                     Log::info('Ledger Data:', ['ledgerData' => $ledgerData]);
 
-                        // $nameField = $ledgerData['LANGUAGENAME.LIST']['NAME.LIST']['NAME'] ?? null;
-                        // if (is_array($nameField)) {
-                        //     $nameField = implode(', ', $nameField);
-                        // }
+                    $applicableFrom = null;
+                    if (isset($ledgerData['LEDGSTREGDETAILS.LIST']['APPLICABLEFROM'])) {
+                        $applicableFrom = Carbon::createFromFormat('Ymd', $ledgerData['LEDGSTREGDETAILS.LIST']['APPLICABLEFROM'])->format('Y-m-d');
+                    }
 
-                        $applicableFrom = null;
-                        if (isset($ledgerData['LEDGSTREGDETAILS.LIST']['APPLICABLEFROM'])) {
-                            $applicableFrom = Carbon::createFromFormat('Ymd', $ledgerData['LEDGSTREGDETAILS.LIST']['APPLICABLEFROM'])->format('Y-m-d');
-                        }
+                    $addressList = $ledgerData['LEDMAILINGDETAILS.LIST']['ADDRESS.LIST']['ADDRESS'] ?? null;
+                    if (is_array($addressList)) {
+                        $addressList = implode(', ', $addressList);
+                    }
 
-                        $addressList = $ledgerData['LEDMAILINGDETAILS.LIST']['ADDRESS.LIST']['ADDRESS'] ?? null;
-                        if (is_array($addressList)) {
-                            $addressList = implode(', ', $addressList);
-                        }
+                    $mailingApplicableFrom = null;
+                    if (isset($ledgerData['LEDMAILINGDETAILS.LIST']['APPLICABLEFROM'])) {
+                        $mailingApplicableFrom = Carbon::createFromFormat('Ymd', $ledgerData['LEDMAILINGDETAILS.LIST']['APPLICABLEFROM'])->format('Y-m-d');
+                    }
 
-                        $mailingApplicableFrom = null;
-                        if (isset($ledgerData['LEDMAILINGDETAILS.LIST']['APPLICABLEFROM'])) {
-                            $mailingApplicableFrom = Carbon::createFromFormat('Ymd', $ledgerData['LEDMAILINGDETAILS.LIST']['APPLICABLEFROM'])->format('Y-m-d');
-                        }
+                    $guid = $ledgerData['GUID'] ?? null;
+                    $companyGuid = substr($guid, 0, 36);
 
-                        $guid = $ledgerData['GUID'] ?? null;
-                        $companyGuid = substr($guid, 0, 36);
+                    $nameField = $ledgerData['LANGUAGENAME.LIST']['NAME.LIST']['NAME'] ?? [];
+                    if (is_array($nameField)) {
+                        $languageName = $nameField[0] ?? null;
+                        $alias = $nameField[1] ?? null;
+                    } else {
+                        $languageName = $nameField;
+                        $alias = null;
+                    }
 
-                        $nameField = $ledgerData['LANGUAGENAME.LIST']['NAME.LIST']['NAME'] ?? [];
-                        if (is_array($nameField)) {
-                            $languageName = $nameField[0] ?? null;
-                            $alias = $nameField[1] ?? null;
-                        } else {
-                            $languageName = $nameField;
-                            $alias = null;
-                        }
+                    $tallyLedger = TallyLedger::updateOrCreate(
+                        ['guid' => $guid],
+                        [
+                            'company_guid' => $companyGuid,
+                            'parent' => $ledgerData['PARENT'] ?? null,
+                            'tax_classification_name' => html_entity_decode($ledgerData['TAXCLASSIFICATIONNAME'] ?? null),
+                            'tax_type' => $ledgerData['TAXTYPE'] ?? null,
+                            'gst_type' => html_entity_decode($ledgerData['GSTTYPE'] ?? null),
+                            'appropriate_for' => html_entity_decode($ledgerData['APPROPRIATEFOR'] ?? null),
+                            'party_gst_in' => $ledgerData['PARTYGSTIN'] ?? null,
+                            'service_category' => html_entity_decode($ledgerData['SERVICECATEGORY'] ?? null),
+                            'gst_registration_type' => $ledgerData['GSTREGISTRATIONTYPE'] ?? null,
+                            'excise_ledger_classification' => html_entity_decode($ledgerData['EXCISELEDGERCLASSIFICATION'] ?? null),
+                            'excise_duty_type' => html_entity_decode($ledgerData['EXCISEDUTYTYPE'] ?? null),
+                            'excise_nature_of_purchase' => html_entity_decode($ledgerData['EXCISENATUREOFPURCHASE'] ?? null),
+                            'ledger_fbt_category' => html_entity_decode($ledgerData['LEDGERFBTCATEGORY'] ?? null),
+                            'is_bill_wise_on' => $ledgerData['ISBILLWISEON'] ?? null,
+                            'is_cost_centres_on' => $ledgerData['ISCOSTCENTRESON'] ?? null,
+                            'alter_id' => $ledgerData['ALTERID'] ?? null,
+                            'opening_balance' => $ledgerData['OPENINGBALANCE'] ?? null,
+                            'language_name' => $languageName,
+                            'alias' => $alias,
+                            'language_id' => $ledgerData['LANGUAGENAME.LIST']['LANGUAGEID'] ?? null,
+                            'applicable_from' => $applicableFrom,
+                            'ledger_gst_registration_type' => $ledgerData['LEDGSTREGDETAILS.LIST']['GSTREGISTRATIONTYPE'] ?? null,
+                            'gst_in' => $ledgerData['LEDGSTREGDETAILS.LIST']['GSTIN'] ?? null,
+                            'mailing_applicable_from' => $mailingApplicableFrom,
+                            'pincode' => $ledgerData['LEDMAILINGDETAILS.LIST']['PINCODE'] ?? null,
+                            'mailing_name' => html_entity_decode($ledgerData['LEDMAILINGDETAILS.LIST']['MAILINGNAME'] ?? null),
+                            'address' => $addressList,
+                            'state' => html_entity_decode($ledgerData['LEDMAILINGDETAILS.LIST']['STATE'] ?? null),
+                            'country' => html_entity_decode($ledgerData['LEDMAILINGDETAILS.LIST']['COUNTRY'] ?? null),
+                        ]
+                    );
 
-                        // Debugging output
-                        // Log::info('nameField:', ['nameField' => $nameField]);
-                        // Log::info('LANGUAGENAME:', ['languageName' => $languageName]);
-                        // Log::info('alias:', ['alias' => $alias]);
-
-                        $tallyLedger = TallyLedger::updateOrCreate(
-                            ['guid' => $guid],
-                            [
-                                'company_guid' => $companyGuid,
-                                'parent' => $ledgerData['PARENT'] ?? null,
-                                'tax_classification_name' => html_entity_decode($ledgerData['TAXCLASSIFICATIONNAME'] ?? null),
-                                'tax_type' => $ledgerData['TAXTYPE'] ?? null,
-                                'gst_type' => html_entity_decode($ledgerData['GSTTYPE'] ?? null),
-                                'appropriate_for' => html_entity_decode($ledgerData['APPROPRIATEFOR'] ?? null),
-                                'party_gst_in' => $ledgerData['PARTYGSTIN'] ?? null,
-                                'service_category' => html_entity_decode($ledgerData['SERVICECATEGORY'] ?? null),
-                                'gst_registration_type' => $ledgerData['GSTREGISTRATIONTYPE'] ?? null,
-                                'excise_ledger_classification' => html_entity_decode($ledgerData['EXCISELEDGERCLASSIFICATION'] ?? null),
-                                'excise_duty_type' => html_entity_decode($ledgerData['EXCISEDUTYTYPE'] ?? null),
-                                'excise_nature_of_purchase' => html_entity_decode($ledgerData['EXCISENATUREOFPURCHASE'] ?? null),
-                                'ledger_fbt_category' => html_entity_decode($ledgerData['LEDGERFBTCATEGORY'] ?? null),
-                                'is_bill_wise_on' => $ledgerData['ISBILLWISEON'] ?? null,
-                                'is_cost_centres_on' => $ledgerData['ISCOSTCENTRESON'] ?? null,
-                                'alter_id' => $ledgerData['ALTERID'] ?? null,
-                                'opening_balance' => $ledgerData['OPENINGBALANCE'] ?? null,
-                                'language_name' => $languageName,
-                                'alias' => $alias,
-                                'language_id' => $ledgerData['LANGUAGENAME.LIST']['LANGUAGEID'] ?? null,
-                                'applicable_from' => $applicableFrom,
-                                'ledger_gst_registration_type' => $ledgerData['LEDGSTREGDETAILS.LIST']['GSTREGISTRATIONTYPE'] ?? null,
-                                'gst_in' => $ledgerData['LEDGSTREGDETAILS.LIST']['GSTIN'] ?? null,
-                                'mailing_applicable_from' => $mailingApplicableFrom,
-                                'pincode' => $ledgerData['LEDMAILINGDETAILS.LIST']['PINCODE'] ?? null,
-                                'mailing_name' => html_entity_decode($ledgerData['LEDMAILINGDETAILS.LIST']['MAILINGNAME'] ?? null),
-                                'address' => $addressList,
-                                'state' => html_entity_decode($ledgerData['LEDMAILINGDETAILS.LIST']['STATE'] ?? null),
-                                'country' => html_entity_decode($ledgerData['LEDMAILINGDETAILS.LIST']['COUNTRY'] ?? null),
-                            ]
-                        );
-
-                        if (!$tallyLedger) {
-                            throw new \Exception('Failed to create or update tally ledger record.');
-                        }
+                    if (!$tallyLedger) {
+                        throw new \Exception('Failed to create or update tally ledger record.');
+                    }
                 }
             }
 
-            return response()->json(['message' => 'Tally data saved successfully.']);
+            return response()->json(['message' => 'Tally data saved successfully.', 'path' => $messagesPath]);
 
         } catch (\Exception $e) {
             Log::error('Error importing data: ' . $e->getMessage());
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
-    
+   
     public function stockItemJsonImport(Request $request)
     {
         try {
@@ -218,28 +235,34 @@ class LedgerController extends Controller
             file_put_contents($jsonFilePath, $jsonData);
             $jsonData = file_get_contents($jsonFilePath);
             $data = json_decode($jsonData, true);
-
-            if (!isset($data['ENVELOPE']['BODY']['IMPORTDATA']['REQUESTDATA']['TALLYMESSAGE'])) {
-                throw new \Exception('Invalid JSON structure.');
+    
+            // Find TALLYMESSAGE key in the JSON data
+            $result = $this->findTallyMessage($data);
+            
+            if ($result === null) {
+                throw new \Exception('TALLYMESSAGE key not found in the JSON data.');
             }
-
-            $messages = $data['ENVELOPE']['BODY']['IMPORTDATA']['REQUESTDATA']['TALLYMESSAGE'];
-
-        
+    
+            $messagesPath = $result['path'];
+            $messages = $result['value'];
+    
+            // Process each TALLYMESSAGE
             foreach ($messages as $message) {
                 if (isset($message['UNIT'])) {
                     $unitData = $message['UNIT'];
                     Log::info('Unit Data:', ['unitData' => $unitData]);
-
+    
                     // Extract REPORTINGUQCDETAILS.LIST
                     $reportingUQCDetails = $unitData['REPORTINGUQCDETAILS.LIST'] ?? [];
                     $reportingUQCName = $reportingUQCDetails['REPORTINGUQCNAME'] ?? null;
                     $applicableFrom = $reportingUQCDetails['APPLICABLEFROM'] ?? null;
 
+                    $name = is_array($unitData['NAME']) ? $unitData['NAME'][0] : $unitData['NAME'];
+    
                     $tallyUnit = TallyUnit::updateOrCreate(
                         ['guid' => $unitData['GUID'] ?? null],
                         [
-                            'name' => $unitData['NAME'] ?? null,
+                            'name' => $name,
                             'is_updating_target_id' => $unitData['ISUPDATINGTARGETID'] ?? null,
                             'is_deleted' => $unitData['ISDELETED'] ?? null,
                             'is_security_on_when_entered' => $unitData['ISSECURITYONWHENENTERED'] ?? null,
@@ -251,24 +274,23 @@ class LedgerController extends Controller
                             'applicable_from' => $applicableFrom,
                         ]
                     );
-
+    
                     if (!$tallyUnit) {
                         throw new \Exception('Failed to create or update tally unit record.');
                     }
                 }
             }
-
-
+    
             foreach ($messages as $message) {
                 if (isset($message['GODOWN'])) {
                     $godownData = $message['GODOWN'];
                     Log::info('Godown Data:', ['godownData' => $godownData]);
-
+    
                     $nameField = $godownData['LANGUAGENAME.LIST']['NAME.LIST']['NAME'] ?? null;
-                        if (is_array($nameField)) {
-                            $nameField = implode(', ', $nameField);
-                        }
-
+                    if (is_array($nameField)) {
+                        $nameField = implode(', ', $nameField);
+                    }
+    
                     $tallyGodown = TallyGodown::updateOrCreate(
                         ['guid' => $godownData['GUID'] ?? null],
                         [
@@ -295,23 +317,18 @@ class LedgerController extends Controller
                             'language_id' => $godownData['LANGUAGENAME.LIST']['LANGUAGEID'] ?? null,
                         ]
                     );
-
+    
                     if (!$tallyGodown) {
                         throw new \Exception('Failed to create or update tally Godown record.');
                     }
                 }
             }
-
-
+    
             foreach ($messages as $message) {
                 if (isset($message['STOCKITEM'])) {
                     $stockItemData = $message['STOCKITEM'];
                     Log::info('Stock Item Data:', ['stockItemData' => $stockItemData]);
-
-                    // $nameField = $stockItemData['LANGUAGENAME.LIST']['NAME.LIST']['NAME'] ?? [];
-                    // $languageName = $nameField[0] ?? null;
-                    // $alias = $nameField[1] ?? null;
-
+    
                     $nameField = $stockItemData['LANGUAGENAME.LIST']['NAME.LIST']['NAME'] ?? [];
                     if (is_array($nameField)) {
                         $languageName = $nameField[0] ?? null;
@@ -320,10 +337,11 @@ class LedgerController extends Controller
                         $languageName = $nameField;
                         $alias = null;
                     }
-
+    
                     $tallyStockItem = TallyItem::updateOrCreate(
                         ['guid' => $stockItemData['GUID'] ?? null],
                         [
+                            'name' => $stockItemData['NAME'] ?? null,
                             'parent' => $stockItemData['PARENT'] ?? null,
                             'category' => $stockItemData['CATEGORY'] ?? null,
                             'gst_applicable' => $stockItemData['GSTAPPLICABLE'] ?? null,
@@ -391,206 +409,255 @@ class LedgerController extends Controller
                             'batch_allocations' => json_encode($stockItemData['BATCHALLOCATIONS.LIST'] ?? []),
                         ]
                     );
-
+    
                     if (!$tallyStockItem) {
-                        throw new \Exception('Failed to create or update tally Stock Item record.');
+                        throw new \Exception('Failed to create or update tally stock item record.');
                     }
                 }
             }
-
-
-            return response()->json(['message' => 'Tally data saved successfully.']);
-
+    
+            return response()->json(['message' => 'Tally data saved successfully.', 'path' => $messagesPath]);
         } catch (\Exception $e) {
-            Log::error('Error importing data: ' . $e->getMessage());
-            return response()->json(['error' => $e->getMessage()], 500);
+            Log::error('Error importing stock items:', ['error' => $e->getMessage()]);
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
     }
-
     public function voucherJsonImport(Request $request)
     {
         try {
             $jsonData = $request->getContent();
-            $fileName = 'tally_voucher_data_' . date('YmdHis') . '.json';
+            $fileName = 'tally_voucher_data_' . now()->format('YmdHis') . '.json';
             $jsonFilePath = storage_path('app/' . $fileName);
             file_put_contents($jsonFilePath, $jsonData);
+            $data = json_decode(file_get_contents($jsonFilePath), true);
     
-            $jsonData = file_get_contents($jsonFilePath);
-            $data = json_decode($jsonData, true);
+            // Log::info('Full JSON Data:', ['data' => $data]);
     
-            if (!isset($data['ENVELOPE']['BODY']['IMPORTDATA']['REQUESTDATA']['TALLYMESSAGE'])) {
-                throw new \Exception('Invalid JSON structure.');
+            // Find TALLYMESSAGE key in the JSON data
+            $result = $this->findTallyMessage($data);
+    
+            if ($result === null) {
+                throw new \Exception('TALLYMESSAGE key not found in the JSON data.');
             }
     
-            $messages = $data['ENVELOPE']['BODY']['IMPORTDATA']['REQUESTDATA']['TALLYMESSAGE'];
+            $messagesPath = $result['path'];
+            $messages = $result['value'];
+    
+            // Store ledger name to head_id mapping
+            $ledgerHeadMap = [];
     
             foreach ($messages as $message) {
                 if (isset($message['VOUCHER'])) {
                     $voucherData = $message['VOUCHER'];
-    
                     $partyLedgerName = $voucherData['PARTYLEDGERNAME'] ?? $voucherData['PARTYNAME'] ?? null;
     
-                    // Handle LEDGERENTRIES.LIST entries
-                    $ledgerEntries = [];
-                    if (isset($voucherData['LEDGERENTRIES.LIST']) && is_array($voucherData['LEDGERENTRIES.LIST'])) {
-                        foreach ($voucherData['LEDGERENTRIES.LIST'] as $entry) {
-                            if (isset($entry['LEDGERNAME'], $entry['AMOUNT'])) {
-                                $ledgerName = htmlspecialchars_decode($entry['LEDGERNAME']);
-                                $amount = $entry['AMOUNT'];
-                                $entryType = $amount < 0 ? "debit" : "credit";
-    
-                                // Find ledger_guid from TallyLedger based on ledger_name
-                                $ledger = TallyLedger::where('language_name', $ledgerName)->first();
-                                $ledgerGuid = $ledger ? $ledger->guid : null;
-    
-                                // Save or process each ledger entry as needed
-                                $ledgerEntries[] = [
-                                    'ledger_name' => $ledgerName,
-                                    'amount' => $amount,
-                                    'entry_type' => $entryType,
-                                    'ledger_guid' => $ledgerGuid,
-                                ];
-                            } else {
-                                Log::error('Missing or invalid LEDGERNAME or AMOUNT in LEDGERENTRIES.LIST entry: ' . json_encode($entry));
-                            }
+                    // Normalize ledger entries, inventory entries, and bill allocations
+                    $ledgerEntries = $this->normalizeEntries($voucherData['LEDGERENTRIES.LIST'] ?? []);
+                    $inventoryEntries = $this->normalizeEntries($voucherData['ALLINVENTORYENTRIES.LIST'] ?? []);
+                    $billAllocations = [];
+                    foreach ($ledgerEntries as $ledgerEntry) {
+                        if (isset($ledgerEntry['BILLALLOCATIONS.LIST'])) {
+                            $billAllocations[$ledgerEntry['LEDGERNAME']] = $this->normalizeEntries($ledgerEntry['BILLALLOCATIONS.LIST']);
                         }
                     }
     
-                    // Handle ALLINVENTORYENTRIES.LIST entries
-                    $inventoryEntries = [];
-                    if (isset($voucherData['ALLINVENTORYENTRIES.LIST'])) {
-                        if (is_array($voucherData['ALLINVENTORYENTRIES.LIST']) && array_keys($voucherData['ALLINVENTORYENTRIES.LIST']) !== range(0, count($voucherData['ALLINVENTORYENTRIES.LIST']) - 1)) {
-                            // Single entry case, wrap it in an array
-                            $voucherData['ALLINVENTORYENTRIES.LIST'] = [$voucherData['ALLINVENTORYENTRIES.LIST']];
-                        }
-                        foreach ($voucherData['ALLINVENTORYENTRIES.LIST'] as $inventoryEntry) {
-                            $rateString = $inventoryEntry['RATE'] ?? null;
-                            $unit = null;
+                    $ledgerEntries = $this->processLedgerEntries($ledgerEntries, $ledgerHeadMap);
+                    $inventoryEntries = $this->processInventoryEntries($inventoryEntries);
     
-                            // Extract rate and unit from rateString
-                            if ($rateString !== null) {
-                                // Split rateString by "/"
-                                $parts = explode('/', $rateString);
-                                if (count($parts) === 2) {
-                                    $rate = trim($parts[0]); // Extract rate part
-                                    $unit = trim($parts[1]); // Extract unit part
-                                } else {
-                                    $rate = $rateString; // Use the whole string as rate if no "/" found
-                                }
-                            } else {
-                                $rate = null;
-                            }
-    
-                            // Save or process each inventory entry as needed
-                            $inventoryEntries[] = [
-                                'stock_item_name' => $inventoryEntry['STOCKITEMNAME'] ?? null,
-                                'gst_taxability' => $inventoryEntry['GSTOVRDNTAXABILITY'] ?? null,
-                                'gst_source_type' => $inventoryEntry['GSTSOURCETYPE'] ?? null,
-                                'gst_item_source' => $inventoryEntry['GSTITEMSOURCE'] ?? null,
-                                'gst_ledger_source' => $inventoryEntry['GSTLEDGERSOURCE'] ?? null,
-                                'hsn_source_type' => $inventoryEntry['HSNSOURCETYPE'] ?? null,
-                                'hsn_item_source' => $inventoryEntry['HSNLEDGERSOURCE'] ?? null,
-                                'gst_rate_infer_applicability' => $inventoryEntry['GSTRATEINFERAPPLICABILITY'] ?? null,
-                                'gst_hsn_infer_applicability' => $inventoryEntry['GSTHSNINFERAPPLICABILITY'] ?? null,
-                                'rate' => $rate,
-                                'unit' => $unit, // Save unit separately
-                                // Add more fields as needed
-                            ];
-                        }
-                    }
-    
-                    $guid = $voucherData['GUID'] ?? null;
-                    $companyGuid = substr($guid, 0, 36);
-    
-                    // Check if the voucher already exists
-                    $tallyVoucher = TallyVoucher::where('guid', $guid)->first();
+                    $tallyVoucher = TallyVoucher::updateOrCreate(
+                        ['guid' => $voucherData['GUID']],
+                        [
+                            'company_guid' => substr($voucherData['GUID'], 0, 36),
+                            'voucher_type' => $voucherData['VOUCHERTYPENAME'] ?? null,
+                            'is_cancelled' => $voucherData['ISCANCELLED'] ?? null,
+                            'alter_id' => $voucherData['ALTERID'] ?? null,
+                            'party_ledger_name' => $partyLedgerName,
+                            'voucher_number' => $voucherData['VOUCHERNUMBER'] ?? null,
+                            'voucher_date' => $voucherData['DATE'] ?? null,
+                            'place_of_supply' => $voucherData['PLACEOFSUPPLY'] ?? null,
+                            'country_of_residense' => $voucherData['COUNTRYOFRESIDENCE'] ?? null,
+                            'gst_registration_type' => $voucherData['GSTREGISTRATIONTYPE'] ?? null,
+                            'numbering_style' => $voucherData['NUMBERINGSTYLE'] ?? null,
+                            'narration' => $voucherData['NARRATION'] ?? null,
+                            'cost_center_name' => $voucherData['COSTCENTRENAME'] ?? null,
+                            'cost_center_amount' => $voucherData['COSTCENTREAMOUNT'] ?? null,
+                        ]
+                    );
     
                     if ($tallyVoucher) {
-                        // Update existing record if needed
-                        $tallyVoucher->update([
-                            'company_guid' => $companyGuid,
-                            'voucher_type' => $voucherData['VOUCHERTYPENAME'] ?? null,
-                            'is_cancelled' => $voucherData['ISCANCELLED'] ?? null,
-                            'alter_id' => $voucherData['ALTERID'] ?? null,
-                            'party_ledger_name' => $partyLedgerName,
-                            'voucher_number' => $voucherData['VOUCHERNUMBER'] ?? null,
-                            'voucher_date' => $voucherData['DATE'] ?? null,
-                            'place_of_supply' => $voucherData['PLACEOFSUPPLY'] ?? null,
-                            'country_of_residense' => $voucherData['COUNTRYOFRESIDENCE'] ?? null,
-                            'gst_registration_type' => $voucherData['GSTREGISTRATIONTYPE'] ?? null,
-                            'numbering_style' => $voucherData['NUMBERINGSTYLE'] ?? null,
-                        ]);
+                        $voucherHeadIds = $this->processLedgerEntriesForVoucher($tallyVoucher->id, $ledgerEntries);
+                        $this->processInventoryEntriesForVoucher($tallyVoucher->id, $inventoryEntries);
+                        $this->processBillAllocationsForVoucher($voucherHeadIds, $billAllocations, $ledgerHeadMap);
                     } else {
-                        // Create new record if not exists
-                        $tallyVoucher = TallyVoucher::create([
-                            'guid' => $guid,
-                            'company_guid' => $companyGuid,
-                            'voucher_type' => $voucherData['VOUCHERTYPENAME'] ?? null,
-                            'is_cancelled' => $voucherData['ISCANCELLED'] ?? null,
-                            'alter_id' => $voucherData['ALTERID'] ?? null,
-                            'party_ledger_name' => $partyLedgerName,
-                            'voucher_number' => $voucherData['VOUCHERNUMBER'] ?? null,
-                            'voucher_date' => $voucherData['DATE'] ?? null,
-                            'place_of_supply' => $voucherData['PLACEOFSUPPLY'] ?? null,
-                            'country_of_residense' => $voucherData['COUNTRYOFRESIDENCE'] ?? null,
-                            'gst_registration_type' => $voucherData['GSTREGISTRATIONTYPE'] ?? null,
-                            'numbering_style' => $voucherData['NUMBERINGSTYLE'] ?? null,
-                        ]);
-                    }
-    
-                    if (!$tallyVoucher) {
                         throw new \Exception('Failed to create or update voucher item record.');
-                    }
-    
-                    // Handle ledger entries
-                    foreach ($ledgerEntries as $entry) {
-                        TallyVoucherHead::updateOrCreate(
-                            [
-                                'tally_voucher_id' => $tallyVoucher->id,
-                                'ledger_name' => $entry['ledger_name'],
-                            ],
-                            [
-                                'amount' => $entry['amount'],
-                                'entry_type' => $entry['entry_type'], // Save entry_type
-                                'ledger_guid' => $entry['ledger_guid'],
-                            ]
-                        );
-                    }
-    
-                    // Create or update TallyVoucherItem records for ALLINVENTORYENTRIES.LIST
-                    foreach ($inventoryEntries as $item) {
-                        TallyVoucherItem::updateOrCreate(
-                            [
-                                'tally_voucher_id' => $tallyVoucher->id,
-                                'stock_item_name' => $item['stock_item_name'],
-                                'rate' => $item['rate'],
-                                'unit' => $item['unit'],
-                            ],
-                            [
-                                'gst_taxability' => $item['gst_taxability'],
-                                'gst_source_type' => $item['gst_source_type'],
-                                'gst_item_source' => $item['gst_item_source'],
-                                'gst_ledger_source' => $item['gst_ledger_source'],
-                                'hsn_source_type' => $item['hsn_source_type'],
-                                'hsn_item_source' => $item['hsn_item_source'],
-                                'gst_rate_infer_applicability' => $item['gst_rate_infer_applicability'],
-                                'gst_hsn_infer_applicability' => $item['gst_hsn_infer_applicability'],
-                            ]
-                        );
-                    }
-    
-                    if (!$tallyVoucher) {
-                        throw new \Exception('Failed to create or update tally voucher record.');
                     }
                 }
             }
     
-            return response()->json(['message' => 'Tally voucher data saved successfully.']);
-    
+            return response()->json(['message' => 'Tally data saved successfully.', 'path' => $messagesPath]);
         } catch (\Exception $e) {
             Log::error('Error saving Tally voucher data: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to save Tally voucher data.'], 500);
         }
     }
+    
+    private function normalizeEntries($entries)
+    {
+        if (is_object($entries)) {
+            $entries = (array) $entries;
+        }
+    
+        // Handle the case where $entries is an empty object
+        if (empty($entries)) {
+            return [];
+        }
+    
+        return is_array($entries) && !isset($entries[0]) ? [$entries] : $entries;
+    }
+    
+    private function processLedgerEntries(array $entries)
+    {
+        $ledgerEntries = [];
+        foreach ($entries as $entry) {
+            if (isset($entry['LEDGERNAME'], $entry['AMOUNT'])) {
+                $ledgerName = htmlspecialchars_decode($entry['LEDGERNAME']);
+                $amount = $entry['AMOUNT'];
+                $entryType = $amount < 0 ? "debit" : "credit";
+                $ledgerGuid = TallyLedger::where('language_name', $ledgerName)->value('guid');
+    
+                $ledgerEntries[] = [
+                    'ledger_name' => $ledgerName,
+                    'amount' => $amount,
+                    'entry_type' => $entryType,
+                    'ledger_guid' => $ledgerGuid,
+                ];
+            } else {
+                Log::error('Missing or invalid LEDGERNAME or AMOUNT in LEDGERENTRIES.LIST entry: ' . json_encode($entry));
+            }
+        }
+        return $ledgerEntries;
+    }
+    
+    private function processInventoryEntries(array $entries)
+    {
+        $inventoryEntries = [];
+        foreach ($entries as $entry) {
+            $rateString = $entry['RATE'] ?? null;
+            $rate = $unit = null;
+    
+            if ($rateString) {
+                $parts = explode('/', $rateString);
+                if (count($parts) === 2) {
+                    $rate = trim($parts[0]);
+                    $unit = trim($parts[1]);
+                } else {
+                    $rate = $rateString;
+                }
+            }
+    
+            $inventoryEntries[] = [
+                'stock_item_name' => $entry['STOCKITEMNAME'] ?? null,
+                'gst_taxability' => $entry['GSTOVRDNTAXABILITY'] ?? null,
+                'gst_source_type' => $entry['GSTSOURCETYPE'] ?? null,
+                'gst_item_source' => $entry['GSTITEMSOURCE'] ?? null,
+                'gst_ledger_source' => $entry['GSTLEDGERSOURCE'] ?? null,
+                'hsn_source_type' => $entry['HSNSOURCETYPE'] ?? null,
+                'hsn_item_source' => $entry['HSNLEDGERSOURCE'] ?? null,
+                'gst_rate_infer_applicability' => $entry['GSTRATEINFERAPPLICABILITY'] ?? null,
+                'gst_hsn_infer_applicability' => $entry['GSTHSNINFERAPPLICABILITY'] ?? null,
+                'rate' => $rate,
+                'unit' => $unit,
+            ];
+        }
+        return $inventoryEntries;
+    }
+    
+    private function processLedgerEntriesForVoucher($voucherId, array $entries)
+    {
+        $voucherHeadIds = [];
+        foreach ($entries as $entry) {
+            $voucherHead = TallyVoucherHead::updateOrCreate(
+                [
+                    'tally_voucher_id' => $voucherId,
+                    'ledger_name' => $entry['ledger_name'],
+                ],
+                [
+                    'amount' => $entry['amount'],
+                    'entry_type' => $entry['entry_type'],
+                    'ledger_guid' => $entry['ledger_guid'],
+                ]
+            );
+            $voucherHeadIds[] = $voucherHead->id;
+        }
+        return $voucherHeadIds;
+    }
+    
+    private function processInventoryEntriesForVoucher($voucherId, array $entries)
+    {
+        foreach ($entries as $item) {
+            TallyVoucherItem::updateOrCreate(
+                [
+                    'tally_voucher_id' => $voucherId,
+                    'stock_item_name' => $item['stock_item_name'],
+                    'rate' => $item['rate'],
+                    'unit' => $item['unit'],
+                ],
+                [
+                    'gst_taxability' => $item['gst_taxability'],
+                    'gst_source_type' => $item['gst_source_type'],
+                    'gst_item_source' => $item['gst_item_source'],
+                    'gst_ledger_source' => $item['gst_ledger_source'],
+                    'hsn_source_type' => $item['hsn_source_type'],
+                    'hsn_item_source' => $item['hsn_item_source'],
+                    'gst_rate_infer_applicability' => $item['gst_rate_infer_applicability'],
+                    'gst_hsn_infer_applicability' => $item['gst_hsn_infer_applicability'],
+                ]
+            );
+        }
+    }
+    
+    private function processBillAllocationsForVoucher($voucherHeadIds, array $billAllocations)
+    {
+        foreach ($billAllocations as $ledgerName => $allocations) {
+            // Find the corresponding head_id for this ledgerName
+            $headId = collect($voucherHeadIds)->firstWhere('ledger_name', $ledgerName)->id ?? null;
+    
+            if ($headId) {
+                foreach ($allocations as $entry) {
+                    // Check if $entry is an array and not empty
+                    if (is_array($entry) && !empty(array_filter($entry))) {
+                        try {
+                            // Log the data being processed
+                            Log::info('Processing Bill Allocation:', [
+                                'head_id' => $headId,
+                                'entry' => $entry,
+                            ]);
+    
+                            // Store the data as-is, even if some fields might be missing
+                            TallyBillAllocation::updateOrCreate(
+                                [
+                                    'head_id' => $headId,
+                                    'name' => $entry['NAME'] ?? null, // Use 'NAME' instead of 'BILLNAME'
+                                ],
+                                [
+                                    'billamount' => $entry['AMOUNT'] ?? null,
+                                    'billtype' => $entry['BILLTYPE'] ?? null,
+                                ]
+                            );
+                        } catch (\Exception $e) {
+                            Log::error('Error processing bill allocation: ' . $e->getMessage());
+                        }
+                    } else {
+                        Log::warning('Invalid or empty bill allocation entry format:', ['entry' => $entry]);
+                    }
+                }
+            } else {
+                Log::warning('No matching ledger head found for ledgerName:', ['ledgerName' => $ledgerName]);
+            }
+        }
+    }
 
+    
+          
+    
 }

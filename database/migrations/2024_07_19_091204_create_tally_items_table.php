@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('tally_items', function (Blueprint $table) {
             $table->id();
             $table->string('guid')->unique();
+            $table->string('name')->nullable();
             $table->string('parent')->nullable();
             $table->string('category')->nullable();
             $table->string('gst_applicable')->nullable();

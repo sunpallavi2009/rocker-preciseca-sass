@@ -15,6 +15,14 @@ return new class extends Migration
     {
         Schema::create('tally_bank_allocations', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('head_id') // Define the head_id column and set it as a foreign key
+            ->constrained('tally_voucher_heads')
+            ->onDelete('cascade');
+            $table->string('bank_name')->nullable();
+            $table->date('instrument_date')->nullable();
+            $table->string('instrument_number')->nullable();
+            $table->string('transaction_type')->nullable();
+            $table->date('bank_date')->nullable();
             $table->timestamps();
         });
     }
