@@ -33,6 +33,9 @@ class CreateNewUser implements CreatesNewUsers
             $user = User::create([
                 'name' => $input['name'],
                 'email' => $input['email'],
+                'role' => $input['role'],
+                // 'status' => $input['status'],
+                'tally_connector_id' => $input['tally_connector_id'],
                 'password' => Hash::make($input['password']),
                 'remember_token' => Str::random(60),
             ]);

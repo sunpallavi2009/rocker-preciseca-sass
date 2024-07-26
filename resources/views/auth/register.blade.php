@@ -16,7 +16,7 @@
                                             <img src="assets/images/logo-icon.png" width="60" alt="" />
                                         </div>
                                         <div class="text-center mb-4">
-                                            <h5 class="">Rocker Admin</h5>
+                                            <h5 class="">Sign Up</h5>
                                             <p class="mb-0">Please fill the below details to create your account</p>
                                         </div>
                                         <x-jet-validation-errors class="mb-4 text-danger" />
@@ -32,6 +32,26 @@
                                                     <label for="inputEmailAddress" class="form-label">Email Address</label>
                                                     <input type="email" class="form-control" id="inputEmailAddress" placeholder="example@user.com"  name="email" :value="old('email')" required>
                                                 </div>
+                                                <div class="col-12">
+                                                    <label for="inputTallyConnectorId" class="form-label">Tally Connector Id</label>
+                                                    <input type="text" class="form-control" id="inputTallyConnectorId" placeholder="Enter Tally Connector Id"  name="tally_connector_id" :value="old('tally_connector_id')">
+                                                </div>
+                                                <div class="col-12">
+                                                    <label for="inputRole" class="form-label">Role</label>
+                                                    <select class="form-select mb-3" aria-label="Default select example" name="role">
+                                                        <option selected="">Select Role</option>
+                                                        <option value="SuperAdmin">SuperAdmin</option>
+                                                        <option value="Users">Users</option>
+                                                    </select>
+                                                </div>
+                                                {{-- <div class="col-12">
+                                                    <label for="inputStatus" class="form-label">Status</label>
+                                                    <select class="form-select mb-3" aria-label="Default select example" name="status">
+                                                        <option selected="">Select Status</option>
+                                                        <option value="1">Active</option>
+                                                        <option value="0">InActive</option>
+                                                    </select>
+                                                </div> --}}
                                                 <div class="col-12">
                                                     <label for="inputChoosePassword" class="form-label">Password</label>
                                                     <div class="input-group" id="show_hide_password">

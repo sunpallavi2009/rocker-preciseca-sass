@@ -16,6 +16,8 @@ use App\Models\TallyVoucher;
 use App\Models\TallyVoucherHead;
 use App\Models\TallyVoucherItem;
 use App\Models\TallyBillAllocation;
+use App\Models\TallyBatchAllocation;
+use App\Models\TallyBankAllocation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log; 
 
@@ -93,7 +95,6 @@ class LedgerController extends Controller
         }
     }
     
-
     public function masterJsonImport(Request $request)
     {
         try {
@@ -184,6 +185,7 @@ class LedgerController extends Controller
                             'parent' => $ledgerData['PARENT'] ?? null,
                             'tax_classification_name' => html_entity_decode($ledgerData['TAXCLASSIFICATIONNAME'] ?? null),
                             'tax_type' => $ledgerData['TAXTYPE'] ?? null,
+                            'bill_credit_period' => $ledgerData['BILLCREDITPERIOD'] ?? null,
                             'gst_type' => html_entity_decode($ledgerData['GSTTYPE'] ?? null),
                             'appropriate_for' => html_entity_decode($ledgerData['APPROPRIATEFOR'] ?? null),
                             'party_gst_in' => $ledgerData['PARTYGSTIN'] ?? null,
@@ -422,6 +424,11 @@ class LedgerController extends Controller
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
     }
+
+
+
+
+
     public function voucherJsonImport(Request $request)
     {
         try {
@@ -430,40 +437,55 @@ class LedgerController extends Controller
             $jsonFilePath = storage_path('app/' . $fileName);
             file_put_contents($jsonFilePath, $jsonData);
             $data = json_decode(file_get_contents($jsonFilePath), true);
-    
-            // Log::info('Full JSON Data:', ['data' => $data]);
-    
+
             // Find TALLYMESSAGE key in the JSON data
             $result = $this->findTallyMessage($data);
-    
+
             if ($result === null) {
                 throw new \Exception('TALLYMESSAGE key not found in the JSON data.');
             }
-    
+
             $messagesPath = $result['path'];
             $messages = $result['value'];
-    
+
             // Store ledger name to head_id mapping
             $ledgerHeadMap = [];
-    
+
             foreach ($messages as $message) {
                 if (isset($message['VOUCHER'])) {
                     $voucherData = $message['VOUCHER'];
                     $partyLedgerName = $voucherData['PARTYLEDGERNAME'] ?? $voucherData['PARTYNAME'] ?? null;
-    
-                    // Normalize ledger entries, inventory entries, and bill allocations
+
+                    // Combine LEDGERENTRIES.LIST and ALLLEDGERENTRIES.LIST
                     $ledgerEntries = $this->normalizeEntries($voucherData['LEDGERENTRIES.LIST'] ?? []);
+                    $allLedgerEntries = $this->normalizeEntries($voucherData['ALLLEDGERENTRIES.LIST'] ?? []);
+                    $combinedLedgerEntries = array_merge($ledgerEntries, $allLedgerEntries);
+
                     $inventoryEntries = $this->normalizeEntries($voucherData['ALLINVENTORYENTRIES.LIST'] ?? []);
                     $billAllocations = [];
-                    foreach ($ledgerEntries as $ledgerEntry) {
+                    foreach ($combinedLedgerEntries as $ledgerEntry) {
                         if (isset($ledgerEntry['BILLALLOCATIONS.LIST'])) {
                             $billAllocations[$ledgerEntry['LEDGERNAME']] = $this->normalizeEntries($ledgerEntry['BILLALLOCATIONS.LIST']);
                         }
                     }
-    
-                    $ledgerEntries = $this->processLedgerEntries($ledgerEntries, $ledgerHeadMap);
+
+                    $bankAllocations = [];
+                    foreach ($combinedLedgerEntries as $ledgerEntry) {
+                        if (isset($ledgerEntry['BANKALLOCATIONS.LIST'])) {
+                            $bankAllocations[$ledgerEntry['LEDGERNAME']] = $this->normalizeEntries($ledgerEntry['BANKALLOCATIONS.LIST']);
+                        }
+                    }
+
+                    $batchAllocations = [];
+                    foreach ($inventoryEntries as $inventoryEntry) {
+                        if (isset($inventoryEntry['BATCHALLOCATIONS.LIST'])) {
+                            $batchAllocations[$inventoryEntry['STOCKITEMNAME']] = $this->normalizeEntries($inventoryEntry['BATCHALLOCATIONS.LIST']);
+                        }
+                    }
+
+                    $combinedLedgerEntries = $this->processLedgerEntries($combinedLedgerEntries);
                     $inventoryEntries = $this->processInventoryEntries($inventoryEntries);
-    
+
                     $tallyVoucher = TallyVoucher::updateOrCreate(
                         ['guid' => $voucherData['GUID']],
                         [
@@ -483,17 +505,19 @@ class LedgerController extends Controller
                             'cost_center_amount' => $voucherData['COSTCENTREAMOUNT'] ?? null,
                         ]
                     );
-    
+
                     if ($tallyVoucher) {
-                        $voucherHeadIds = $this->processLedgerEntriesForVoucher($tallyVoucher->id, $ledgerEntries);
-                        $this->processInventoryEntriesForVoucher($tallyVoucher->id, $inventoryEntries);
-                        $this->processBillAllocationsForVoucher($voucherHeadIds, $billAllocations, $ledgerHeadMap);
+                        $voucherHeadIds = $this->processLedgerEntriesForVoucher($tallyVoucher->id, $combinedLedgerEntries);
+                        $inventoryEntriesWithId = $this->processInventoryEntriesForVoucher($tallyVoucher->id, $inventoryEntries);
+                        $this->processBillAllocationsForVoucher($voucherHeadIds, $billAllocations);
+                        $this->processBankAllocationsForVoucher($voucherHeadIds, $bankAllocations);
+                        $this->processBatchAllocationsForVoucher($inventoryEntriesWithId, $batchAllocations);
                     } else {
                         throw new \Exception('Failed to create or update voucher item record.');
                     }
                 }
             }
-    
+
             return response()->json(['message' => 'Tally data saved successfully.', 'path' => $messagesPath]);
         } catch (\Exception $e) {
             Log::error('Error saving Tally voucher data: ' . $e->getMessage());
@@ -507,12 +531,16 @@ class LedgerController extends Controller
             $entries = (array) $entries;
         }
     
-        // Handle the case where $entries is an empty object
-        if (empty($entries)) {
-            return [];
+        if (is_array($entries)) {
+            foreach ($entries as &$entry) {
+                if (is_object($entry)) {
+                    $entry = (array) $entry;
+                }
+            }
+            return empty($entries) || isset($entries[0]) ? $entries : [$entries];
         }
     
-        return is_array($entries) && !isset($entries[0]) ? [$entries] : $entries;
+        return [];
     }
     
     private function processLedgerEntries(array $entries)
@@ -587,15 +615,19 @@ class LedgerController extends Controller
                     'ledger_guid' => $entry['ledger_guid'],
                 ]
             );
-            $voucherHeadIds[] = $voucherHead->id;
+            $voucherHeadIds[] = [
+                'id' => $voucherHead->id,
+                'ledger_name' => $entry['ledger_name'],
+            ];
         }
         return $voucherHeadIds;
     }
     
     private function processInventoryEntriesForVoucher($voucherId, array $entries)
     {
+        $inventoryEntriesWithId = [];
         foreach ($entries as $item) {
-            TallyVoucherItem::updateOrCreate(
+            $inventoryEntries =  TallyVoucherItem::updateOrCreate(
                 [
                     'tally_voucher_id' => $voucherId,
                     'stock_item_name' => $item['stock_item_name'],
@@ -613,51 +645,101 @@ class LedgerController extends Controller
                     'gst_hsn_infer_applicability' => $item['gst_hsn_infer_applicability'],
                 ]
             );
+            $inventoryEntriesWithId[] = [
+                'id' => $inventoryEntries->id,
+                'stock_item_name' => $item['stock_item_name'],
+            ];
         }
+        return $inventoryEntriesWithId;
     }
-    
+
     private function processBillAllocationsForVoucher($voucherHeadIds, array $billAllocations)
     {
-        foreach ($billAllocations as $ledgerName => $allocations) {
-            // Find the corresponding head_id for this ledgerName
-            $headId = collect($voucherHeadIds)->firstWhere('ledger_name', $ledgerName)->id ?? null;
-    
-            if ($headId) {
-                foreach ($allocations as $entry) {
-                    // Check if $entry is an array and not empty
-                    if (is_array($entry) && !empty(array_filter($entry))) {
-                        try {
-                            // Log the data being processed
-                            Log::info('Processing Bill Allocation:', [
-                                'head_id' => $headId,
-                                'entry' => $entry,
-                            ]);
-    
-                            // Store the data as-is, even if some fields might be missing
-                            TallyBillAllocation::updateOrCreate(
-                                [
-                                    'head_id' => $headId,
-                                    'name' => $entry['NAME'] ?? null, // Use 'NAME' instead of 'BILLNAME'
-                                ],
-                                [
-                                    'billamount' => $entry['AMOUNT'] ?? null,
-                                    'billtype' => $entry['BILLTYPE'] ?? null,
-                                ]
-                            );
-                        } catch (\Exception $e) {
-                            Log::error('Error processing bill allocation: ' . $e->getMessage());
-                        }
-                    } else {
-                        Log::warning('Invalid or empty bill allocation entry format:', ['entry' => $entry]);
+        foreach ($voucherHeadIds as $voucherHead) {
+            $ledgerName = $voucherHead['ledger_name'];
+            if (isset($billAllocations[$ledgerName]) && is_array($billAllocations[$ledgerName])) {
+                foreach ($billAllocations[$ledgerName] as $bill) {
+                    if (isset($bill['NAME'], $bill['AMOUNT'])) {
+                        TallyBillAllocation::updateOrCreate(
+                            [
+                                'head_id' => $voucherHead['id'],
+                                'name' => $bill['NAME'],
+                                'billamount' => $bill['AMOUNT'],
+                                'yearend' => $bill['YEAREND'],
+                                'billtype' => $bill['BILLTYPE'],
+                            ]
+                        );
                     }
                 }
-            } else {
-                Log::warning('No matching ledger head found for ledgerName:', ['ledgerName' => $ledgerName]);
             }
         }
     }
 
+    private function processBankAllocationsForVoucher($voucherHeadIds, array $bankAllocations)
+    {
+        foreach ($voucherHeadIds as $voucherHead) {
+            $ledgerName = $voucherHead['ledger_name'];
+            if (isset($bankAllocations[$ledgerName]) && is_array($bankAllocations[$ledgerName])) {
+                foreach ($bankAllocations[$ledgerName] as $bank) {
+                    // Sanitize date values
+                    $bankDate = $this->sanitizeDate($bank['DATE'] ?? null);
+                    $instrumentDate = $this->sanitizeDate($bank['INSTRUMENTDATE'] ?? null);
     
-          
+                    if (isset($bank['BANKNAME'], $bank['AMOUNT'])) {
+                        TallyBankAllocation::updateOrCreate(
+                            [
+                                'head_id' => $voucherHead['id'] ?? null,
+                                'bank_date' => $bankDate,
+                                'instrument_date' => $instrumentDate,
+                                'instrument_number' => $bank['INSTRUMENTNUMBER'] ?? null,
+                                'transaction_type' => $bank['TRANSACTIONTYPE'] ?? null,
+                                'bank_name' => $bank['BANKNAME'] ?? null,
+                                'amount' => $bank['AMOUNT'] ?? null,
+                            ]
+                        );
+                    }
+                }
+            }
+        }
+    }
+    
+    private function sanitizeDate($date)
+    {
+        // Check if date is valid, if not return null or a default value
+        if (empty($date) || !strtotime($date)) {
+            return null; // or you can return a default value like '0000-00-00'
+        }
+    
+        // Format date to 'Y-m-d' or other desired format
+        return date('Y-m-d', strtotime($date));
+    }
+
+    private function processBatchAllocationsForVoucher(array $inventoryEntriesWithId, array $batchAllocations)
+    {
+        foreach ($inventoryEntriesWithId as $inventoryEntries) {
+            $stockItemName = $inventoryEntries['stock_item_name'];
+            if (isset($batchAllocations[$stockItemName]) && is_array($batchAllocations[$stockItemName])) {
+                foreach ($batchAllocations[$stockItemName] as $batch) {
+                    if (isset($batch['BATCHNAME'], $batch['AMOUNT'])) {
+                        TallyBatchAllocation::updateOrCreate(
+                            [
+                            'item_id' => $inventoryEntries['id'],
+                            'batch_name' => $batch['BATCHNAME'],
+                            'godown_name' => $batch['GODOWNNAME'] ?? null,
+                            'destination_godown_name' => $batch['DESTINATIONGODOWNNAME'] ?? null,
+                            'amount' => $batch['AMOUNT'],
+                            'actual_qty' => $batch['ACTUALQTY'] ?? null,
+                            'billed_qty' => $batch['BILLEDQTY'] ?? null,
+                            'order_no' => $batch['ORDERNO'] ?? null,
+                            'batch_physical_diff' => $batch['BATCHPHYSDIFF'] ?? null,
+                            ]
+                        );
+                    }
+                }
+            }
+        }
+    }
+   
+
     
 }

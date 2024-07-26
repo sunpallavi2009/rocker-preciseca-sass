@@ -36,4 +36,28 @@
 @push('javascript')
     @include('layouts.includes.datatable-js')
     {!! $dataTable->scripts() !!}
+
+    <script>
+        function changeStatus(userId, status) {
+            $.ajax({
+                url: '/update-user-status', // Replace with your route
+                method: 'POST',
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    user_id: userId,
+                    status: status
+                },
+                success: function(response) {
+                    if(response.success) {
+                        $('#user-table').DataTable().ajax.reload(); // Reload table data
+                    } else {
+                        alert('Failed to update status.');
+                    }
+                },
+                error: function() {
+                    alert('An error occurred.');
+                }
+            });
+        }
+    </script>
 @endpush

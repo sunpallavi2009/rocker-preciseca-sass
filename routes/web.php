@@ -57,7 +57,8 @@ Route::middleware([
     // ->name('dashboard');
 
     Route::get('/dashboard', [HomeController::class, 'index']);
-    
+    Route::post('/update-user-status', [UserController::class, 'updateStatus'])->name('update.user.status');
+
     Route::resource('tenants', TenantController::class);
 
     Route::resource('customers', CustomerController::class);
@@ -70,7 +71,9 @@ Route::middleware([
     Route::resource('stock-items', StockItemController::class);
 
     
-    Route::resource('reports', ReportController::class);
+    Route::resource('reports', ReportController::class)->except(['show']);
+    Route::get('reports/DayBook', [ReportController::class, 'DayBookReports'])->name('reports.daybook');
+
 
     Route::resource('users', UserController::class);
 

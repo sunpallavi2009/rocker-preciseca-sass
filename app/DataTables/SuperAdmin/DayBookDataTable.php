@@ -3,37 +3,49 @@
 namespace App\DataTables\SuperAdmin;
 
 use Carbon\Carbon;
-use App\Models\User;
+use App\Models\TallyVoucher;
+use App\Facades\UtilityFacades;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Services\DataTable;
 
-class UserDataTable extends DataTable
+class DayBookDataTable extends DataTable
 {
+
     public function dataTable($query)
     {
         return datatables()
             ->eloquent($query)
             ->addIndexColumn()
-            ->editColumn('created_at', function ($user) {
-                return Carbon::parse($user->created_at)->format('Y-m-d');
+            ->editColumn('created_at', function ($request) {
+                return Carbon::parse($request->created_at)->format('Y-m-d H:i:s');
             })
-            ->editColumn('updated_at', function ($user) {
-                return Carbon::parse($user->updated_at)->format('Y-m-d');
+            ->addColumn('entry_type', function ($entry) {
+                return $entry->entry_type; // Directly from the joined table
             })
-            ->addColumn('status', function ($user) {
-                return view('superadmin.users.user_action', compact('user'));
+            ->addColumn('credit', function ($entry) {
+                // Return the credit amount if the entry type is credit
+                return $entry->entry_type === 'credit' ? number_format(abs($entry->amount), 2, '.', '') : '-';
+            })
+            ->addColumn('debit', function ($entry) {
+                // Return the debit amount if the entry type is debit
+                return $entry->entry_type === 'debit' ? number_format(abs($entry->amount), 2, '.', '') : '-';
             });
     }
 
-    public function query(User $model)
+    public function query(TallyVoucher $model)
     {
-        return $model->newQuery();
+        return $model->newQuery()
+            ->select('tally_vouchers.*', 'tally_voucher_heads.entry_type', 'tally_voucher_heads.amount')
+            ->leftJoin('tally_voucher_heads', function($join) {
+                $join->on('tally_vouchers.party_ledger_name', '=', 'tally_voucher_heads.ledger_name')
+                     ->on('tally_vouchers.id', '=', 'tally_voucher_heads.tally_voucher_id'); // Adjust as needed
+            });
     }
 
     public function html()
     {
         return $this->builder()
-            ->setTableId('user-table')
+            ->setTableId('daybook-table')
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(3)
@@ -56,11 +68,12 @@ class UserDataTable extends DataTable
             }')
             ->parameters([
                 "dom" =>  "
-                    <'dataTable-top row'<'dataTable-dropdown page-dropdown col-lg-3 col-sm-12'l><'dataTable-botton table-btn col-lg-6 col-sm-12'B><'dataTable-search tb-search col-lg-3 col-sm-12'f>>
-                    <'dataTable-container'<'col-sm-12'tr>>
-                    <'dataTable-bottom row'<'col-sm-5'i><'col-sm-7'p>>
-                ",
-                'buttons'   => [],
+                               <'dataTable-top row'<'dataTable-dropdown page-dropdown col-lg-3 col-sm-12'l><'dataTable-botton table-btn col-lg-6 col-sm-12'B><'dataTable-search tb-search col-lg-3 col-sm-12'f>>
+                             <'dataTable-container'<'col-sm-12'tr>>
+                             <'dataTable-bottom row'<'col-sm-5'i><'col-sm-7'p>>
+                               ",
+                'buttons'   => [
+                ],
                 "scrollX" => true,
                 "drawCallback" => 'function( settings ) {
                     var tooltipTriggerList = [].slice.call(
@@ -97,29 +110,19 @@ class UserDataTable extends DataTable
     {
         return [
             Column::make('No')->data('DT_RowIndex')->name('DT_RowIndex')->searchable(false)->orderable(false),
-            Column::make('name')->title(__('Name')),
-            Column::make('email')->title(__('Email')),
-            Column::make('tally_connector_id')->title(__('Tally Connector Id')),
-            Column::make('role')->title(__('Role')),
-            Column::make('status')->title(__('Status')),
-            // Column::make('status')
-            //     ->title(__('Status'))
-            //     ->render('function() {
-            //         var status = this.status ? "Active" : "Inactive";
-            //         var statusClass = this.status ? "btn-success" : "btn-danger";
-            //         return `<button class="btn ${statusClass} dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">${status}</button>
-            //                 <ul class="dropdown-menu">
-            //                     <li><a class="dropdown-item" href="#" onclick="changeStatus(${this.id}, 1)">Active</a></li>
-            //                     <li><a class="dropdown-item" href="#" onclick="changeStatus(${this.id}, 0)">Inactive</a></li>
-            //                 </ul>`;
-            //     }'),
-            Column::make('created_at')->title(__('Created At')),
-            Column::make('updated_at')->title(__('Updated At')),
+            // Column::make('guid')->title(__('Guid')),
+            Column::make('voucher_date')->title(__('Date')),
+            Column::make('party_ledger_name')->title(__('Ledger')),
+            Column::make('voucher_type')->title(__('Voucher Type')),
+            Column::make('voucher_number')->title(__('Voucher Number')),
+            // Column::make('entry_type')->title(__('entry type')),
+            Column::make('debit')->title(__('Debit')),
+            Column::make('credit')->title(__('Credit')),
         ];
     }
 
     protected function filename(): string
     {
-        return 'User_' . date('YmdHis');
+        return 'Faq_' . date('YmdHis');
     }
 }

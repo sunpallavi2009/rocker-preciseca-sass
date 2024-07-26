@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('instrument_number')->nullable();
             $table->string('transaction_type')->nullable();
             $table->date('bank_date')->nullable();
+            $table->string('amount')->nullable();
             $table->timestamps();
         });
     }

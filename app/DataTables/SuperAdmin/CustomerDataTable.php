@@ -42,6 +42,14 @@ class CustomerDataTable extends DataTable
                 $url = route('customers.show', ['customer' => $data->guid]); // Ensure 'customer' matches the route parameter name
                 return '<a href="' . $url . '" style="color: #337ab7;">' . $data->language_name . '</a>';
             })
+            ->editColumn('bill_credit_period', function ($data) {
+                // Check if bill_credit_period is null or empty, then display "-"
+                if (empty($data->bill_credit_period)) {
+                    return '-';
+                }
+                // Extract numeric part from the bill_credit_period
+                return preg_replace('/\D/', '', $data->bill_credit_period);
+            })
             ->rawColumns(['language_name']);
     }
 
@@ -181,7 +189,7 @@ class CustomerDataTable extends DataTable
             Column::make('opening_balance')->title(__('&#8377 Last Payment (Date)')),
             Column::make('opening_balance')->title(__('Avg Pay day'))->addClass('text-end'),
             Column::make('opening_balance')->title(__('&#8377 Credit Limit'))->addClass('text-end'),
-            Column::make('opening_balance')->title(__('&#8377 Credit Period (Days)'))->addClass('text-end'),
+            Column::make('bill_credit_period')->title(__('&#8377 Credit Period (Days)'))->addClass('text-end'),
         ];
     }
 
