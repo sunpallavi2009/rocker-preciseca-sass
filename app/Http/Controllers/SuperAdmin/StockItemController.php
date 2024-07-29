@@ -12,7 +12,7 @@ use App\DataTables\SuperAdmin\StockItemDataTable;
 
 class StockItemController extends Controller
 {
-
+    
     public function index(StockItemDataTable $dataTable)
     {
         return $dataTable->render('superadmin.stock-items.index');

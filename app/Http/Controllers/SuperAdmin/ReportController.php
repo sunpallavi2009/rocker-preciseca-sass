@@ -16,7 +16,7 @@ use App\DataTables\SuperAdmin\GeneralLedgerDataTable;
 
 class ReportController extends Controller
 {
-
+    
     public function index()
     {
         return view ('superadmin.reports.index');
@@ -60,13 +60,10 @@ class ReportController extends Controller
             ->make(true);
     }
 
-
-
     public function AllGeneralGroupLedgerReports($generalLedgerId)
     {
         $generalLedger = TallyGroup::findOrFail($generalLedgerId);
 
-        // $menuItems = TallyGroup::where('parent', '')->get();
         $menuItems = TallyGroup::where('parent', $generalLedger->parent)->get();
 
         return view('superadmin.reports._general_group_ledger_details', [
@@ -90,9 +87,6 @@ class ReportController extends Controller
             })
             ->make(true);
     }
-
-
-
 
     public function show($id)
     {

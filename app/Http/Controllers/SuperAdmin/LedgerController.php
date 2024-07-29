@@ -425,10 +425,6 @@ class LedgerController extends Controller
         }
     }
 
-
-
-
-
     public function voucherJsonImport(Request $request)
     {
         try {
@@ -739,7 +735,5 @@ class LedgerController extends Controller
             }
         }
     }
-   
-
     
 }

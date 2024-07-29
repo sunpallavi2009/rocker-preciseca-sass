@@ -58,6 +58,5 @@ class CustomerController extends Controller
             })
             ->make(true);
     }
-    
 
 }
