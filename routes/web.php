@@ -73,6 +73,13 @@ Route::middleware([
     
     Route::resource('reports', ReportController::class)->except(['show']);
     Route::get('reports/DayBook', [ReportController::class, 'DayBookReports'])->name('reports.daybook');
+    Route::get('reports/GeneralLedger', [ReportController::class, 'GeneralLedgerReports'])->name('reports.GeneralLedger');
+    Route::get('reports/GeneralLedger/{GeneralLedger}', [ReportController::class, 'AllGeneralLedgerReports'])->name('reports.GeneralLedger.details');
+    Route::get('reports/GeneralLedger/data/{generalLedgerId}', [ReportController::class, 'getGeneralLedgerData'])->name('reports.GeneralLedger.data');
+
+    Route::get('reports/GeneralGroupLedger/{GeneralLedger}', [ReportController::class, 'AllGeneralGroupLedgerReports'])->name('reports.GeneralGroupLedger.details');
+    Route::get('reports/GeneralGroupLedger/data/{generalLedgerId}', [ReportController::class, 'getGeneralGroupLedgerData'])->name('reports.GeneralGroupLedger.data');
+
 
 
     Route::resource('users', UserController::class);

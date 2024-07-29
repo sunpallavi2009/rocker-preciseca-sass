@@ -38,7 +38,7 @@
                                             <div class="pt-4">
                                                 <h5 class="my-1"><a class="nav-link " href="{{ route('reports.daybook') }}">Daybook</a></h5>
                                                 <hr class="border-1">
-                                                <h5 class="my-1">General Ledger</h5>
+                                                <h5 class="my-1"><a class="nav-link " href="{{ route('reports.GeneralLedger') }}">General Ledger</a></h5>
                                                 <hr class="border-1">
                                                 <h5 class="my-1">Cash and Bank</h5>
                                                 <hr class="border-1">

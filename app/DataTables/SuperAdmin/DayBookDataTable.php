@@ -34,13 +34,79 @@ class DayBookDataTable extends DataTable
 
     public function query(TallyVoucher $model)
     {
-        return $model->newQuery()
+        $query = $model->newQuery()
             ->select('tally_vouchers.*', 'tally_voucher_heads.entry_type', 'tally_voucher_heads.amount')
             ->leftJoin('tally_voucher_heads', function($join) {
                 $join->on('tally_vouchers.party_ledger_name', '=', 'tally_voucher_heads.ledger_name')
-                     ->on('tally_vouchers.id', '=', 'tally_voucher_heads.tally_voucher_id'); // Adjust as needed
+                    ->on('tally_vouchers.id', '=', 'tally_voucher_heads.tally_voucher_id'); // Adjust as needed
             });
+
+        // Check if date range is provided
+        if (request()->has('start_date') && request()->has('end_date')) {
+            $startDate = request('start_date');
+            $endDate = request('end_date');
+
+            // Check if dates are valid before parsing
+            if ($startDate && $endDate) {
+                try {
+                    $startDate = Carbon::parse($startDate)->startOfDay();
+                    $endDate = Carbon::parse($endDate)->endOfDay();
+                    $query->whereBetween('voucher_date', [$startDate, $endDate]);
+                } catch (\Exception $e) {
+                    // Handle exception or log it
+                    \Log::error('Date parsing error: ' . $e->getMessage());
+                }
+            }
+        }
+
+        // Check if voucher_type is provided
+        if (request()->has('voucher_type')) {
+            $voucherType = request('voucher_type');
+            if ($voucherType) {
+                $query->where('voucher_type', $voucherType);
+            }
+        }
+
+        return $query;
     }
+
+
+    // public function query(TallyVoucher $model)
+    // {
+    //     return $model->newQuery()
+    //         ->select('tally_vouchers.*', 'tally_voucher_heads.entry_type', 'tally_voucher_heads.amount')
+    //         ->leftJoin('tally_voucher_heads', function($join) {
+    //             $join->on('tally_vouchers.party_ledger_name', '=', 'tally_voucher_heads.ledger_name')
+    //                  ->on('tally_vouchers.id', '=', 'tally_voucher_heads.tally_voucher_id'); // Adjust as needed
+    //         });
+
+
+            // $query = $model->newQuery()
+            // ->select('tally_vouchers.*', 'tally_voucher_heads.entry_type', 'tally_voucher_heads.amount')
+            // ->leftJoin('tally_voucher_heads', function($join) {
+            //     $join->on('tally_vouchers.party_ledger_name', '=', 'tally_voucher_heads.ledger_name')
+            //         ->on('tally_vouchers.id', '=', 'tally_voucher_heads.tally_voucher_id'); // Adjust as needed
+            // });
+
+            // if (request()->has('start_date') && request()->has('end_date')) {
+            //     $startDate = request('start_date');
+            //     $endDate = request('end_date');
+
+            //     // Check if dates are valid before parsing
+            //     if ($startDate && $endDate) {
+            //         try {
+            //             $startDate = Carbon::parse($startDate)->startOfDay();
+            //             $endDate = Carbon::parse($endDate)->endOfDay();
+            //             $query->whereBetween('voucher_date', [$startDate, $endDate]);
+            //         } catch (\Exception $e) {
+            //             // Handle exception or log it
+            //             \Log::error('Date parsing error: ' . $e->getMessage());
+            //         }
+            //     }
+            // }
+
+            // return $query;
+    // }
 
     public function html()
     {
