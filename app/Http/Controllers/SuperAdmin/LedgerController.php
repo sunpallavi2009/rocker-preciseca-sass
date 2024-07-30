@@ -649,27 +649,60 @@ class LedgerController extends Controller
         return $inventoryEntriesWithId;
     }
 
+
     private function processBillAllocationsForVoucher($voucherHeadIds, array $billAllocations)
     {
         foreach ($voucherHeadIds as $voucherHead) {
             $ledgerName = $voucherHead['ledger_name'];
             if (isset($billAllocations[$ledgerName]) && is_array($billAllocations[$ledgerName])) {
                 foreach ($billAllocations[$ledgerName] as $bill) {
-                    if (isset($bill['NAME'], $bill['AMOUNT'])) {
-                        TallyBillAllocation::updateOrCreate(
-                            [
-                                'head_id' => $voucherHead['id'],
-                                'name' => $bill['NAME'],
-                                'billamount' => $bill['AMOUNT'],
-                                'yearend' => $bill['YEAREND'],
-                                'billtype' => $bill['BILLTYPE'],
-                            ]
-                        );
+                    try {
+                        if (isset($bill['NAME'], $bill['AMOUNT'])) {
+                            TallyBillAllocation::updateOrCreate(
+                                [
+                                    'head_id' => $voucherHead['id'],
+                                    'name' => $bill['NAME'],
+                                ],
+                                [
+                                    'billamount' => $bill['AMOUNT'],
+                                    'yearend' => $bill['YEAREND'] ?? null, // Use null if YEAREND is not present
+                                    'billtype' => $bill['BILLTYPE'] ?? null, // Use null if BILLTYPE is not present
+                                ]
+                            );
+                        } else {
+                            Log::error('Missing NAME or AMOUNT in BILLALLOCATIONS.LIST entry: ' . json_encode($bill));
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Error processing bill allocation: ' . $e->getMessage());
+                        // Continue with the next bill allocation
                     }
                 }
             }
         }
     }
+
+
+    // private function processBillAllocationsForVoucher($voucherHeadIds, array $billAllocations)
+    // {
+    //     foreach ($voucherHeadIds as $voucherHead) {
+    //         $ledgerName = $voucherHead['ledger_name'];
+    //         if (isset($billAllocations[$ledgerName]) && is_array($billAllocations[$ledgerName])) {
+    //             foreach ($billAllocations[$ledgerName] as $bill) {
+    //                 if (isset($bill['NAME'], $bill['AMOUNT'])) {
+    //                     TallyBillAllocation::updateOrCreate(
+    //                         [
+    //                             'head_id' => $voucherHead['id'],
+    //                             'name' => $bill['NAME'],
+    //                             'billamount' => $bill['AMOUNT'],
+    //                             'yearend' => $bill['YEAREND'],
+    //                             'billtype' => $bill['BILLTYPE'],
+    //                         ]
+    //                     );
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     private function processBankAllocationsForVoucher($voucherHeadIds, array $bankAllocations)
     {

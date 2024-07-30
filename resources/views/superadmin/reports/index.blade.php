@@ -40,7 +40,7 @@
                                                 <hr class="border-1">
                                                 <h5 class="my-1"><a class="nav-link " href="{{ route('reports.GeneralLedger') }}">General Ledger</a></h5>
                                                 <hr class="border-1">
-                                                <h5 class="my-1">Cash and Bank</h5>
+                                                <h5 class="my-1"><a class="nav-link " href="{{ route('reports.CashBank') }}">Cash and Bank</a></h5>
                                                 <hr class="border-1">
                                                 <h5 class="my-1">Payment Register</h5>
                                                 <hr class="border-1">
@@ -96,7 +96,7 @@
                                            </div>
                                        </div>
                                        <div class="pt-4">
-                                           <h5 class="my-1">Stock Items</h5>
+                                           <h5 class="my-1"><a class="nav-link " href="{{ route('stock-items.index') }}">Stock Items</a></h5>
                                            <hr class="border-1">
                                            <h5 class="my-1">Fast and Slow Moving Items</h5>
                                            <hr class="border-1">

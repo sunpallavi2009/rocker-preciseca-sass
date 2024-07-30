@@ -7,7 +7,10 @@ use App\Http\Controllers\TenantController;
 use App\Http\Controllers\SuperAdmin\CustomerController;
 use App\Http\Controllers\SuperAdmin\SupplierController;
 use App\Http\Controllers\SuperAdmin\StockItemController;
-use App\Http\Controllers\SuperAdmin\ReportController;
+use App\Http\Controllers\SuperAdmin\Reports\ReportController;
+use App\Http\Controllers\SuperAdmin\Reports\ReportCashBankController;
+use App\Http\Controllers\SuperAdmin\Reports\ReportGeneralLedgerController;
+use App\Http\Controllers\SuperAdmin\Reports\ReportDayBookController;
 use App\Http\Controllers\SuperAdmin\UserController;
 use App\Http\Controllers\SuperAdmin\TallyController;
 use Laravel\Jetstream\Http\Controllers\CurrentTeamController;
@@ -72,15 +75,24 @@ Route::middleware([
 
     
     Route::resource('reports', ReportController::class)->except(['show']);
-    Route::get('reports/DayBook', [ReportController::class, 'DayBookReports'])->name('reports.daybook');
-    Route::get('reports/GeneralLedger', [ReportController::class, 'GeneralLedgerReports'])->name('reports.GeneralLedger');
-    Route::get('reports/GeneralLedger/{GeneralLedger}', [ReportController::class, 'AllGeneralLedgerReports'])->name('reports.GeneralLedger.details');
-    Route::get('reports/GeneralLedger/data/{generalLedgerId}', [ReportController::class, 'getGeneralLedgerData'])->name('reports.GeneralLedger.data');
-
-    Route::get('reports/GeneralGroupLedger/{GeneralLedger}', [ReportController::class, 'AllGeneralGroupLedgerReports'])->name('reports.GeneralGroupLedger.details');
-    Route::get('reports/GeneralGroupLedger/data/{generalLedgerId}', [ReportController::class, 'getGeneralGroupLedgerData'])->name('reports.GeneralGroupLedger.data');
 
 
+    Route::get('reports/DayBook', [ReportDayBookController::class, 'index'])->name('reports.daybook');
+
+
+    Route::get('reports/GeneralLedger', [ReportGeneralLedgerController::class, 'index'])->name('reports.GeneralLedger');
+    Route::get('reports/GeneralLedger/{GeneralLedger}', [ReportGeneralLedgerController::class, 'AllGeneralLedgerReports'])->name('reports.GeneralLedger.details');
+    Route::get('reports/GeneralLedger/data/{generalLedgerId}', [ReportGeneralLedgerController::class, 'getGeneralLedgerData'])->name('reports.GeneralLedger.data');
+    Route::get('reports/GeneralGroupLedger/{GeneralLedger}', [ReportGeneralLedgerController::class, 'AllGeneralGroupLedgerReports'])->name('reports.GeneralGroupLedger.details');
+    Route::get('reports/GeneralGroupLedger/data/{generalLedgerId}', [ReportGeneralLedgerController::class, 'getGeneralGroupLedgerData'])->name('reports.GeneralGroupLedger.data');
+
+    Route::get('reports/CashBank', [ReportCashBankController::class, 'index'])->name('reports.CashBank');
+    Route::get('reports/CashBank/{CashBank}', [ReportCashBankController::class, 'AllCashBankReports'])->name('reports.CashBank.details');
+    Route::get('reports/CashBank/data/{cashBankId}', [ReportCashBankController::class, 'getCashBankData'])->name('reports.CashBank.data');
+
+
+    Route::get('reports/VoucherHead/{VoucherHead}', [ReportController::class, 'AllVoucherHeadReports'])->name('reports.VoucherHead');
+    Route::get('reports/VoucherHead/data/{VoucherHeadId}', [ReportController::class, 'getVoucherHeadData'])->name('reports.VoucherHead.data');
 
     Route::resource('users', UserController::class);
 

@@ -35,19 +35,17 @@ class CustomerDataTable extends DataTable
             ->editColumn('created_at', function ($request) {
                 return Carbon::parse($request->created_at)->format('Y-m-d H:i:s');
             })
-            ->editColumn('opening_balance', function ($data) {
-                return $data->opening_balance ? number_format(abs($data->opening_balance), 2) : '0.00';
-            })
+            // ->editColumn('opening_balance', function ($data) {
+            //     return $data->opening_balance !== null ? number_format($data->opening_balance, 2) : '0.00';
+            // })
             ->editColumn('language_name', function ($data) {
                 $url = route('customers.show', ['customer' => $data->guid]); // Ensure 'customer' matches the route parameter name
                 return '<a href="' . $url . '" style="color: #337ab7;">' . $data->language_name . '</a>';
             })
             ->editColumn('bill_credit_period', function ($data) {
-                // Check if bill_credit_period is null or empty, then display "-"
                 if (empty($data->bill_credit_period)) {
                     return '-';
                 }
-                // Extract numeric part from the bill_credit_period
                 return preg_replace('/\D/', '', $data->bill_credit_period);
             })
             ->rawColumns(['language_name']);
@@ -176,19 +174,19 @@ class CustomerDataTable extends DataTable
             // Column::make('guid')->title(__('Guid')),
             Column::make('language_name')->title(__('Name')),
             Column::make('parent')->title(__('Group')),
-            Column::make('opening_balance')->title(__('Sales (Last 30 days)'))->addClass('text-end'),
-            Column::make('opening_balance')->title(__('Sales (Last 30 days)'))->addClass('text-end'),
-            Column::make('opening_balance')->title(__('% Change (Last 30 days)'))->addClass('text-end'),
+            Column::make('parent')->title(__('Sales (Last 30 days)'))->addClass('text-end'),
+            Column::make('parent')->title(__('Sales (Last 30 days)'))->addClass('text-end'),
+            Column::make('parent')->title(__('% Change (Last 30 days)'))->addClass('text-end'),
             Column::make('opening_balance')->title(__('&#8377 Net Outstanding (As of Today)'))->addClass('text-end'),
-            Column::make('opening_balance')->title(__('&#8377 Overdue (Total)'))->addClass('text-end'),
-            Column::make('opening_balance')->title(__('&#8377 Upcoming (Total)'))->addClass('text-end'),
-            Column::make('opening_balance')->title(__('&#8377 Upcoming (Due in 7 days)'))->addClass('text-end'),
+            Column::make('parent')->title(__('&#8377 Overdue (Total)'))->addClass('text-end'),
+            Column::make('parent')->title(__('&#8377 Upcoming (Total)'))->addClass('text-end'),
+            Column::make('parent')->title(__('&#8377 Upcoming (Due in 7 days)'))->addClass('text-end'),
             Column::make('opening_balance')->title(__('&#8377 On Account (As of Today)'))->addClass('text-end'),
-            Column::make('opening_balance')->title(__('&#8377 PDC (Total)'))->addClass('text-end'),
-            Column::make('opening_balance')->title(__('&#8377 Payment Collection (Current FY)'))->addClass('text-end'),
-            Column::make('opening_balance')->title(__('&#8377 Last Payment (Date)')),
-            Column::make('opening_balance')->title(__('Avg Pay day'))->addClass('text-end'),
-            Column::make('opening_balance')->title(__('&#8377 Credit Limit'))->addClass('text-end'),
+            Column::make('parent')->title(__('&#8377 PDC (Total)'))->addClass('text-end'),
+            Column::make('parent')->title(__('&#8377 Payment Collection (Current FY)'))->addClass('text-end'),
+            Column::make('parent')->title(__('&#8377 Last Payment (Date)')),
+            Column::make('parent')->title(__('Avg Pay day'))->addClass('text-end'),
+            Column::make('parent')->title(__('&#8377 Credit Limit'))->addClass('text-end'),
             Column::make('bill_credit_period')->title(__('&#8377 Credit Period (Days)'))->addClass('text-end'),
         ];
     }

@@ -16,6 +16,12 @@ class TallyVoucherHead extends Model
         return $this->belongsTo(TallyVoucher::class, 'tally_voucher_id');
     }
 
+    // TallyVoucherHead.php
+    public function tallyVoucher()
+    {
+        return $this->belongsTo(TallyVoucher::class, 'tally_voucher_id', 'id'); // Adjust as needed
+    }
+
 
 
 }

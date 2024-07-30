@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\SuperAdmin;
+namespace App\Http\Controllers\SuperAdmin\Reports;
 
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
@@ -13,23 +13,14 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log; 
 use App\DataTables\SuperAdmin\DayBookDataTable;
 use App\DataTables\SuperAdmin\GeneralLedgerDataTable;
+use App\DataTables\SuperAdmin\CashBankDataTable;
 
-class ReportController extends Controller
+class ReportGeneralLedgerController extends Controller
 {
-    
-    public function index()
-    {
-        return view ('superadmin.reports.index');
-    }
 
-    public function DayBookReports(DayBookDataTable $dataTable)
+    public function index(GeneralLedgerDataTable $dataTable)
     {
-        return $dataTable->render('superadmin.reports._dayBook');
-    }
-
-    public function GeneralLedgerReports(GeneralLedgerDataTable $dataTable)
-    {
-        return $dataTable->render('superadmin.reports._generalLedger');
+        return $dataTable->render('superadmin.reports.generalLedger.index');
     }
 
     public function AllGeneralLedgerReports($generalLedgerId)
@@ -38,7 +29,7 @@ class ReportController extends Controller
 
         $menuItems = TallyGroup::where('parent', '')->get();
 
-        return view('superadmin.reports._general_ledger_details', [
+        return view('superadmin.reports.generalLedger._general_ledger_details', [
             'generalLedger' => $generalLedger,
             'generalLedgerId' => $generalLedgerId ,
             'menuItems' => $menuItems
@@ -66,7 +57,7 @@ class ReportController extends Controller
 
         $menuItems = TallyGroup::where('parent', $generalLedger->parent)->get();
 
-        return view('superadmin.reports._general_group_ledger_details', [
+        return view('superadmin.reports.generalLedger._general_group_ledger_details', [
             'generalLedger' => $generalLedger,
             'generalLedgerId' => $generalLedgerId ,
             'menuItems' => $menuItems
@@ -86,11 +77,6 @@ class ReportController extends Controller
                 return Carbon::parse($request->created_at)->format('Y-m-d H:i:s');
             })
             ->make(true);
-    }
-
-    public function show($id)
-    {
-        // Handle the show method or leave it empty
     }
 
 }

@@ -136,12 +136,12 @@
             columns: [
                 {
                     data: 'language_name',
-                    name: 'language_name'
-                    // render: function(data, type, row) {
-                    //     var url = '{{ route("reports.GeneralGroupLedger.details", ":id") }}';
-                    //     url = url.replace(':id', row.id);
-                    //     return '<a href="' + url + '" style="color: #337ab7;">' + data + '</a>';
-                    // }
+                    name: 'language_name',
+                    render: function(data, type, row) {
+                        var url = '{{ route("reports.VoucherHead", ":guid") }}';
+                        url = url.replace(':guid', row.guid);
+                        return '<a href="' + url + '" style="color: #337ab7;">' + data + '</a>';
+                    }
                 },
                 { data: 'parent', name: 'parent' },
                 { data: 'parent', name: 'opening_balance' },
