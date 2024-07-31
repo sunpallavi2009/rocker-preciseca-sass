@@ -28,6 +28,8 @@ return new class extends Migration
             $table->string('gst_hsn_infer_applicability')->nullable();
             $table->string('rate')->nullable();
             $table->string('unit')->nullable();
+            $table->string('billed_qty')->nullable();
+            $table->string('amount')->nullable();
             $table->timestamps();
         });
     }

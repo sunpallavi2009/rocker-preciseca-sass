@@ -102,6 +102,17 @@
 
             @if(auth()->check() && auth()->user()->status == 1 && auth()->user()->role == 'Users')
             <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle dropdown-toggle-nocaret {{ request()->routeIs('sales.index') ? 'active' : '' }}" href="{{ route('sales.index') }}">
+                  <div class="parent-icon"><i class='lni lni-stats-up'></i>
+                  </div>
+                  <div class="menu-title d-flex align-items-center">Sales</div>
+                  {{-- <div class="ms-auto dropy-icon"><i class='bx bx-chevron-down'></i></div> --}}
+              </a>
+            </li>
+            @endif
+
+            @if(auth()->check() && auth()->user()->status == 1 && auth()->user()->role == 'Users')
+            <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle dropdown-toggle-nocaret {{ request()->routeIs('reports.index') ? 'active' : '' }}" href="{{ route('reports.index') }}">
                   <div class="parent-icon"><i class='bx bx-calculator'></i>
                   </div>

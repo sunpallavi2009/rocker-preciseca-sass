@@ -186,6 +186,7 @@ class LedgerController extends Controller
                             'tax_classification_name' => html_entity_decode($ledgerData['TAXCLASSIFICATIONNAME'] ?? null),
                             'tax_type' => $ledgerData['TAXTYPE'] ?? null,
                             'bill_credit_period' => $ledgerData['BILLCREDITPERIOD'] ?? null,
+                            'credit_limit' => $ledgerData['CREDITLIMIT'] ?? null,
                             'gst_type' => html_entity_decode($ledgerData['GSTTYPE'] ?? null),
                             'appropriate_for' => html_entity_decode($ledgerData['APPROPRIATEFOR'] ?? null),
                             'party_gst_in' => $ledgerData['PARTYGSTIN'] ?? null,
@@ -339,6 +340,16 @@ class LedgerController extends Controller
                         $languageName = $nameField;
                         $alias = null;
                     }
+
+                    $igstRate = null;
+                    if (isset($stockItemData['GSTDETAILS.LIST']['STATEWISEDETAILS.LIST']['RATEDETAILS.LIST'])) {
+                        foreach ($stockItemData['GSTDETAILS.LIST']['STATEWISEDETAILS.LIST']['RATEDETAILS.LIST'] as $rateDetail) {
+                            if ($rateDetail['GSTRATEDUTYHEAD'] === 'IGST') {
+                                $igstRate = $rateDetail['GSTRATE'] ?? null;
+                                break;
+                            }
+                        }
+                    }
     
                     $tallyStockItem = TallyItem::updateOrCreate(
                         ['guid' => $stockItemData['GUID'] ?? null],
@@ -403,6 +414,7 @@ class LedgerController extends Controller
                             'opening_balance' => $stockItemData['OPENINGBALANCE'] ?? null,
                             'opening_value' => $stockItemData['OPENINGVALUE'] ?? null,
                             'opening_rate' => $stockItemData['OPENINGRATE'] ?? null,
+                            'igst_rate' => $igstRate,
                             'gst_details' => json_encode($stockItemData['GSTDETAILS.LIST'] ?? []),
                             'hsn_details' => json_encode($stockItemData['HSNDETAILS.LIST'] ?? []),
                             'language_name' => $languageName,
@@ -591,6 +603,8 @@ class LedgerController extends Controller
                 'gst_hsn_infer_applicability' => $entry['GSTHSNINFERAPPLICABILITY'] ?? null,
                 'rate' => $rate,
                 'unit' => $unit,
+                'billed_qty' => $entry['BILLEDQTY'] ?? null,
+                'amount' => $entry['AMOUNT'] ?? null,
             ];
         }
         return $inventoryEntries;
@@ -631,6 +645,8 @@ class LedgerController extends Controller
                     'unit' => $item['unit'],
                 ],
                 [
+                    'billed_qty' => $item['billed_qty'],
+                    'amount' => $item['amount'],
                     'gst_taxability' => $item['gst_taxability'],
                     'gst_source_type' => $item['gst_source_type'],
                     'gst_item_source' => $item['gst_item_source'],
@@ -680,29 +696,6 @@ class LedgerController extends Controller
             }
         }
     }
-
-
-    // private function processBillAllocationsForVoucher($voucherHeadIds, array $billAllocations)
-    // {
-    //     foreach ($voucherHeadIds as $voucherHead) {
-    //         $ledgerName = $voucherHead['ledger_name'];
-    //         if (isset($billAllocations[$ledgerName]) && is_array($billAllocations[$ledgerName])) {
-    //             foreach ($billAllocations[$ledgerName] as $bill) {
-    //                 if (isset($bill['NAME'], $bill['AMOUNT'])) {
-    //                     TallyBillAllocation::updateOrCreate(
-    //                         [
-    //                             'head_id' => $voucherHead['id'],
-    //                             'name' => $bill['NAME'],
-    //                             'billamount' => $bill['AMOUNT'],
-    //                             'yearend' => $bill['YEAREND'],
-    //                             'billtype' => $bill['BILLTYPE'],
-    //                         ]
-    //                     );
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
 
     private function processBankAllocationsForVoucher($voucherHeadIds, array $bankAllocations)
     {

@@ -76,6 +76,7 @@ return new class extends Migration
             $table->string('opening_balance')->nullable();
             $table->string('opening_value', 15, 2)->nullable();
             $table->string('opening_rate')->nullable();
+            $table->string('igst_rate')->nullable();
             $table->json('gst_details')->nullable();
             $table->json('hsn_details')->nullable();
             $table->string('language_name')->nullable();

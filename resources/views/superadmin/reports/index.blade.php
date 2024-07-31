@@ -42,9 +42,9 @@
                                                 <hr class="border-1">
                                                 <h5 class="my-1"><a class="nav-link " href="{{ route('reports.CashBank') }}">Cash and Bank</a></h5>
                                                 <hr class="border-1">
-                                                <h5 class="my-1">Payment Register</h5>
+                                                <h5 class="my-1"><a class="nav-link " href="{{ route('reports.PaymentRegister') }}">Payment Register</a></h5>
                                                 <hr class="border-1">
-                                                <h5 class="my-1">Receipt Register</h5>
+                                                <h5 class="my-1"><a class="nav-link " href="{{ route('reports.ReceiptRegister') }}">Receipt Register</a></h5>
                                             </div>
                                     </div>
                                 </div>

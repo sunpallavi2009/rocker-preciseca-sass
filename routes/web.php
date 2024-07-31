@@ -7,10 +7,13 @@ use App\Http\Controllers\TenantController;
 use App\Http\Controllers\SuperAdmin\CustomerController;
 use App\Http\Controllers\SuperAdmin\SupplierController;
 use App\Http\Controllers\SuperAdmin\StockItemController;
+use App\Http\Controllers\SuperAdmin\SalesController;
 use App\Http\Controllers\SuperAdmin\Reports\ReportController;
 use App\Http\Controllers\SuperAdmin\Reports\ReportCashBankController;
 use App\Http\Controllers\SuperAdmin\Reports\ReportGeneralLedgerController;
 use App\Http\Controllers\SuperAdmin\Reports\ReportDayBookController;
+use App\Http\Controllers\SuperAdmin\Reports\ReportPaymentRegisterController;
+use App\Http\Controllers\SuperAdmin\Reports\ReportReceiptRegisterController;
 use App\Http\Controllers\SuperAdmin\UserController;
 use App\Http\Controllers\SuperAdmin\TallyController;
 use Laravel\Jetstream\Http\Controllers\CurrentTeamController;
@@ -91,8 +94,21 @@ Route::middleware([
     Route::get('reports/CashBank/data/{cashBankId}', [ReportCashBankController::class, 'getCashBankData'])->name('reports.CashBank.data');
 
 
+    Route::get('reports/PaymentRegister', [ReportPaymentRegisterController::class, 'index'])->name('reports.PaymentRegister');
+    
+
+    Route::get('reports/ReceiptRegister', [ReportReceiptRegisterController::class, 'index'])->name('reports.ReceiptRegister');
+
+
+
     Route::get('reports/VoucherHead/{VoucherHead}', [ReportController::class, 'AllVoucherHeadReports'])->name('reports.VoucherHead');
     Route::get('reports/VoucherHead/data/{VoucherHeadId}', [ReportController::class, 'getVoucherHeadData'])->name('reports.VoucherHead.data');
+
+
+
+    Route::resource('sales', SalesController::class);
+    Route::get('sales/Item/{Item}', [SalesController::class, 'AllSaleItemReports'])->name('sales.items');
+
 
     Route::resource('users', UserController::class);
 

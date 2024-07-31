@@ -8,7 +8,7 @@ use App\Facades\UtilityFacades;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Services\DataTable;
 
-class DayBookDataTable extends DataTable
+class SalesDataTable extends DataTable
 {
 
     public function dataTable($query)
@@ -29,51 +29,69 @@ class DayBookDataTable extends DataTable
             ->addColumn('debit', function ($entry) {
                 // Return the debit amount if the entry type is debit
                 return $entry->entry_type === 'debit' ? number_format(abs($entry->amount), 2, '.', '') : '-';
-            });
+            })
+            ->addColumn('parent', function ($entry) {
+                return $entry->parent; // Parent value from the joined tally_ledgers table
+            })
+            ->addColumn('igst_amount', function ($entry) {
+                return number_format($entry->igst_amount ?? 0, 2, '.', '');
+            })
+            ->addColumn('round_off_amount', function ($entry) {
+                return number_format($entry->round_off_amount ?? 0, 2, '.', '');
+            })
+            ->addColumn('difference_amount', function ($entry) {
+                // Calculate and display the difference amount
+                $igstAmount = $entry->igst_amount ?? 0;
+                $roundOffAmount = $entry->round_off_amount ?? 0;
+                $difference = $igstAmount + $roundOffAmount; // Difference can be positive or negative
+                return number_format($difference, 2, '.', ''); // Maintain the sign
+            })
+            ->addColumn('party_ledger_name', function ($entry) {
+                return '<a href="' . route('sales.items', ['Item' => $entry->id]) . '">' . $entry->party_ledger_name . '</a>';
+            })
+            ->rawColumns(['party_ledger_name']);
     }
 
     public function query(TallyVoucher $model)
     {
         $query = $model->newQuery()
-            ->select('tally_vouchers.*', 'tally_voucher_heads.entry_type', 'tally_voucher_heads.amount')
+            ->select('tally_vouchers.*', 'tally_voucher_heads.entry_type', 'tally_voucher_heads.amount', 'tally_ledgers.parent')
             ->leftJoin('tally_voucher_heads', function($join) {
                 $join->on('tally_vouchers.party_ledger_name', '=', 'tally_voucher_heads.ledger_name')
-                    ->on('tally_vouchers.id', '=', 'tally_voucher_heads.tally_voucher_id'); // Adjust as needed
-            });
+                    ->on('tally_vouchers.id', '=', 'tally_voucher_heads.tally_voucher_id');
+            })
+            ->leftJoin('tally_ledgers', 'tally_vouchers.party_ledger_name', '=', 'tally_ledgers.language_name')
+        ->leftJoin('tally_voucher_heads as related_heads', 'tally_voucher_heads.tally_voucher_id', '=', 'related_heads.tally_voucher_id')
+        ->groupBy('tally_vouchers.id', 'tally_vouchers.party_ledger_name', 'tally_vouchers.voucher_date', 'tally_vouchers.voucher_number', 'tally_vouchers.voucher_type', 'tally_ledgers.parent', 'tally_voucher_heads.entry_type', 'tally_voucher_heads.amount')
+        ->selectRaw('GROUP_CONCAT(DISTINCT related_heads.ledger_name) as related_ledger_names')
+        ->selectRaw('SUM(CASE WHEN related_heads.ledger_name LIKE "%IGST @18%" THEN related_heads.amount ELSE 0 END) as igst_amount')
+        ->selectRaw('SUM(CASE WHEN related_heads.ledger_name LIKE "%Round Off%" THEN related_heads.amount ELSE 0 END) as round_off_amount');
 
-        // Check if date range is provided
+
+        $query->where('tally_vouchers.voucher_type', 'Sales');
+    
         if (request()->has('start_date') && request()->has('end_date')) {
             $startDate = request('start_date');
             $endDate = request('end_date');
-
-            // Check if dates are valid before parsing
+    
             if ($startDate && $endDate) {
                 try {
                     $startDate = Carbon::parse($startDate)->startOfDay();
                     $endDate = Carbon::parse($endDate)->endOfDay();
                     $query->whereBetween('voucher_date', [$startDate, $endDate]);
                 } catch (\Exception $e) {
-                    // Handle exception or log it
                     \Log::error('Date parsing error: ' . $e->getMessage());
                 }
             }
         }
-
-        // Check if voucher_type is provided
-        if (request()->has('voucher_type')) {
-            $voucherType = request('voucher_type');
-            if ($voucherType) {
-                $query->where('voucher_type', $voucherType);
-            }
-        }
-
+    
         return $query;
     }
 
     public function html()
     {
         return $this->builder()
-            ->setTableId('daybook-table')
+            ->setTableId('sales-table')
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(3)
@@ -138,14 +156,13 @@ class DayBookDataTable extends DataTable
     {
         return [
             Column::make('No')->data('DT_RowIndex')->name('DT_RowIndex')->searchable(false)->orderable(false),
-            // Column::make('guid')->title(__('Guid')),
-            Column::make('voucher_date')->title(__('Date')),
-            Column::make('party_ledger_name')->title(__('Ledger')),
-            Column::make('voucher_type')->title(__('Voucher Type')),
-            Column::make('voucher_number')->title(__('Voucher Number')),
-            // Column::make('entry_type')->title(__('entry type')),
-            Column::make('debit')->title(__('Debit')),
-            Column::make('credit')->title(__('Credit')),
+            Column::make('party_ledger_name')->title(__('Name')),
+            Column::make('parent')->title(__('Group')),
+            Column::make('voucher_date')->title(__('Invoice Date')),
+            Column::make('voucher_number')->title(__('Invoice Number')),
+            Column::make('debit')->title(__('Invoice Amount')),
+            Column::make('difference_amount')->title(__('Pending Amount')),
+            Column::make('place_of_supply')->title(__('Place Of Supply')),
         ];
     }
 

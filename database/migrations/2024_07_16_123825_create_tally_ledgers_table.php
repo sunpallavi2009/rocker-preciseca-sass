@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('tax_classification_name')->nullable();
             $table->string('tax_type')->nullable();
             $table->string('bill_credit_period')->nullable();
+            $table->string('credit_limit')->nullable();
             $table->string('gst_type')->nullable();
             $table->string('appropriate_for')->nullable();
             $table->string('party_gst_in')->nullable();

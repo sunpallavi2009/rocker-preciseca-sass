@@ -8,7 +8,7 @@ use App\Facades\UtilityFacades;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Services\DataTable;
 
-class DayBookDataTable extends DataTable
+class ReceiptRegisterDataTable extends DataTable
 {
 
     public function dataTable($query)
