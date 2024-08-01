@@ -47,7 +47,7 @@ class SalesDataTable extends DataTable
                 return number_format($difference, 2, '.', ''); // Maintain the sign
             })
             ->addColumn('party_ledger_name', function ($entry) {
-                return '<a href="' . route('sales.items', ['Item' => $entry->id]) . '">' . $entry->party_ledger_name . '</a>';
+                return '<a href="' . route('sales.items', ['SaleItem' => $entry->id]) . '">' . $entry->party_ledger_name . '</a>';
             })
             ->rawColumns(['party_ledger_name']);
     }

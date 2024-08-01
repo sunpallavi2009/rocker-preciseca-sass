@@ -30,6 +30,9 @@ return new class extends Migration
             $table->string('unit')->nullable();
             $table->string('billed_qty')->nullable();
             $table->string('amount')->nullable();
+            $table->string('discount')->nullable();
+            $table->string('igst_rate')->nullable();
+            $table->string('gst_hsn_name')->nullable();
             $table->timestamps();
         });
     }

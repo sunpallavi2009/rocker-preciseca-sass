@@ -107,7 +107,8 @@ Route::middleware([
 
 
     Route::resource('sales', SalesController::class);
-    Route::get('sales/Item/{Item}', [SalesController::class, 'AllSaleItemReports'])->name('sales.items');
+    Route::get('sales/Item/{SaleItem}', [SalesController::class, 'AllSaleItemReports'])->name('sales.items');
+    Route::get('sales/SaleItem/data/{SaleItemId}', [SalesController::class, 'getSaleItemData'])->name('sales.SaleItem.data');
 
 
     Route::resource('users', UserController::class);

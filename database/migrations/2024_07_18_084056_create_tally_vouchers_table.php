@@ -23,6 +23,8 @@ return new class extends Migration
             $table->string('party_ledger_name')->nullable();
             $table->string('voucher_number')->nullable();
             $table->date('voucher_date')->nullable();
+            $table->string('reference_no')->nullable();
+            $table->date('reference_date')->nullable();
             $table->string('place_of_supply')->nullable();
             $table->string('country_of_residense')->nullable();
             $table->string('gst_registration_type')->nullable();

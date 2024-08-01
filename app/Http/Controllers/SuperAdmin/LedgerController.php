@@ -504,6 +504,8 @@ class LedgerController extends Controller
                             'party_ledger_name' => $partyLedgerName,
                             'voucher_number' => $voucherData['VOUCHERNUMBER'] ?? null,
                             'voucher_date' => $voucherData['DATE'] ?? null,
+                            'reference_date' => $voucherData['REFERENCEDATE'] ?? null,
+                            'reference_no' => $voucherData['REFERENCE'] ?? null,
                             'place_of_supply' => $voucherData['PLACEOFSUPPLY'] ?? null,
                             'country_of_residense' => $voucherData['COUNTRYOFRESIDENCE'] ?? null,
                             'gst_registration_type' => $voucherData['GSTREGISTRATIONTYPE'] ?? null,
@@ -590,6 +592,16 @@ class LedgerController extends Controller
                     $rate = $rateString;
                 }
             }
+
+            $igstRate = null;
+            if (isset($entry['RATEDETAILS.LIST'])) {
+                foreach ($entry['RATEDETAILS.LIST'] as $rateDetail) {
+                    if ($rateDetail['GSTRATEDUTYHEAD'] === 'IGST') {
+                        $igstRate = $rateDetail['GSTRATE'] ?? null;
+                        break;
+                    }
+                }
+            }
     
             $inventoryEntries[] = [
                 'stock_item_name' => $entry['STOCKITEMNAME'] ?? null,
@@ -605,6 +617,9 @@ class LedgerController extends Controller
                 'unit' => $unit,
                 'billed_qty' => $entry['BILLEDQTY'] ?? null,
                 'amount' => $entry['AMOUNT'] ?? null,
+                'gst_hsn_name' => $entry['GSTHSNNAME'] ?? null,
+                'discount' => $entry['DISCOUNT'] ?? null,
+                'igst_rate' => $igstRate,
             ];
         }
         return $inventoryEntries;
@@ -655,6 +670,9 @@ class LedgerController extends Controller
                     'hsn_item_source' => $item['hsn_item_source'],
                     'gst_rate_infer_applicability' => $item['gst_rate_infer_applicability'],
                     'gst_hsn_infer_applicability' => $item['gst_hsn_infer_applicability'],
+                    'igst_rate' => $item['igst_rate'],
+                    'gst_hsn_name' => $item['gst_hsn_name'],
+                    'discount' => $item['discount'],
                 ]
             );
             $inventoryEntriesWithId[] = [
