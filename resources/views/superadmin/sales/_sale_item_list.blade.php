@@ -160,13 +160,13 @@
                                                             </tr>
                                                             <tr>
                                                                 <th colspan="5"></th>
-                                                                <th style="text-align:right">Round off</th>
-                                                                <th style="text-align:right" id="roundOff">{{ $totalRoundOff }}</th>
+                                                                <th style="text-align:right">IGST @18%</th>
+                                                                <th style="text-align:right" id="igst18">{{ $totalIGST18 }}</th>
                                                             </tr>
                                                             <tr>
                                                                 <th colspan="5"></th>
-                                                                <th style="text-align:right">IGST @18%</th>
-                                                                <th style="text-align:right" id="igst18">{{ $totalIGST18 }}</th>
+                                                                <th style="text-align:right">Round off</th>
+                                                                <th style="text-align:right" id="roundOff">{{ $totalRoundOff }}</th>
                                                             </tr>
                                                             <tr>
                                                                 <th colspan="5"></th>

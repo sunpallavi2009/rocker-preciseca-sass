@@ -32,22 +32,6 @@
                                             <input type="text" id="date_range" name="date_range" class="form-control date-range" placeholder="Select Date Range">
                                         </form>
                                     </div>
-                                    <div class="col-lg-2">
-                                        <form id="voucherTypeForm">
-                                            <label for="voucher_type" class="form-label">Voucher Type</label>
-                                            <select id="voucher_type" name="voucher_type" class="form-select">
-                                                <option value="">All</option>
-                                                <option value="Sales">Sale</option>
-                                                <option value="Purchase">Purchase</option>
-                                                <option value="Credit Note">CreditNote</option>
-                                                <option value="Debit Note">DebitNote</option>
-                                                <option value="Receipt">Receipt</option>
-                                                <option value="Payment">Payment</option>
-                                                {{-- <option value="JournalVoucher">JournalVoucher</option> --}}
-                                                <!-- Add more options as needed -->
-                                            </select>
-                                        </form>
-                                    </div>
                                 </div>
                                 <div class="table-responsive">
                                     {{ $dataTable->table(['width' => '100%']) }}
@@ -87,26 +71,13 @@
             }
         });
 
-        // Handle voucher type filter
-        const voucherTypeSelect = document.getElementById('voucher_type');
-        voucherTypeSelect.addEventListener('change', function() {
-            let voucherType = this.value;
-            let url = new URL(window.location.href);
-            url.searchParams.set('voucher_type', voucherType);
-            window.location.href = url.toString();
-        });
-
         // Reset filters on page load if needed
         document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
             const startDate = urlParams.get('start_date');
             const endDate = urlParams.get('end_date');
-            const voucherType = urlParams.get('voucher_type');
             if (startDate && endDate) {
                 dateRangeInput._flatpickr.setDate([startDate, endDate], false);
-            }
-            if (voucherType) {
-                voucherTypeSelect.value = voucherType;
             }
         });
     </script>

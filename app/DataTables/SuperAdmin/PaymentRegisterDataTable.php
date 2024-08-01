@@ -39,7 +39,8 @@ class PaymentRegisterDataTable extends DataTable
             ->leftJoin('tally_voucher_heads', function($join) {
                 $join->on('tally_vouchers.party_ledger_name', '=', 'tally_voucher_heads.ledger_name')
                     ->on('tally_vouchers.id', '=', 'tally_voucher_heads.tally_voucher_id'); // Adjust as needed
-            });
+            })
+            ->where('tally_vouchers.voucher_type', 'Payment');
 
         // Check if date range is provided
         if (request()->has('start_date') && request()->has('end_date')) {
@@ -56,14 +57,6 @@ class PaymentRegisterDataTable extends DataTable
                     // Handle exception or log it
                     \Log::error('Date parsing error: ' . $e->getMessage());
                 }
-            }
-        }
-
-        // Check if voucher_type is provided
-        if (request()->has('voucher_type')) {
-            $voucherType = request('voucher_type');
-            if ($voucherType) {
-                $query->where('voucher_type', $voucherType);
             }
         }
 
