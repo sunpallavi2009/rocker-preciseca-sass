@@ -1,5 +1,5 @@
 @extends("layouts.main")
-@section('title', __('Invoices | Preciseca'))
+@section('title', __('Reports | Preciseca'))
 @section("style")
 <link href="{{ url('assets/plugins/bs-stepper/css/bs-stepper.css') }}" rel="stylesheet" />
 <link href="{{ url('assets/plugins/datatable/css/dataTables.bootstrap5.min.css') }}" rel="stylesheet" />
@@ -10,21 +10,38 @@
         overflow-x: hidden !important; /* Optional, hides horizontal scrollbar */
         border: 1px solid #ddd;
     }
+    .voucher-details {
+        display: flex;
+        flex-direction: column;
+        margin-left: 0.5rem;
+    }
+
+    .voucher-number, .voucher-type {
+        display: block;
+    }
 
 </style>
+@if ($saleReceiptItem)
+    <!-- Code to display data related to $saleReceiptItem -->
+@else
+    <div class="alert alert-warning">
+        No receipt item found for the selected voucher.
+    </div>
+@endif
+
 @endsection
 @section("wrapper")
 <div class="page-wrapper">
     <div class="page-content">
         <!--breadcrumb-->
         <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
-            <div class="breadcrumb-title pe-3">Invoices</div>
+            <div class="breadcrumb-title pe-3">Reports</div>
             <div class="ps-3">
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0 p-0">
                         <li class="breadcrumb-item"><a href="javascript:;"><i class="bx bx-home-alt"></i></a>
                         </li>
-                        <li class="breadcrumb-item active" aria-current="page">Sales</li>
+                        <li class="breadcrumb-item active" aria-current="page">Voucher Item</li>
                     </ol>
                 </nav>
             </div>
@@ -35,15 +52,18 @@
          <!--start email wrapper-->
          <div class="email-wrapper">
             <div class="email-sidebar">
-                <div class="email-sidebar-header d-grid"> <a href="javascript:;" class="btn btn-primary compose-mail-btn"><i class='bx bx-left-arrow-alt me-2'></i> Sales</a>
+                <div class="email-sidebar-header d-grid"> <a href="javascript:;" class="btn btn-primary compose-mail-btn"><i class='bx bx-left-arrow-alt me-2'></i> Voucher Item</a>
                 </div>
                 <div class="email-sidebar-content">
                     <div class="email-navigation" style="height: 530px;">
                         <div class="list-group list-group-flush">
                             @foreach($menuItems as $item)
-                                <a href="{{ route('sales.items', ['SaleItem' => $item->id]) }}" class="list-group-item d-flex align-items-center {{ request()->route('SaleItem') == $item->id ? 'active' : '' }}" style="border-top: none;">
+                                <a href="{{ route('reports.VoucherItem', ['VoucherItem' => $item->id]) }}" class="list-group-item d-flex align-items-center {{ request()->route('VoucherItem') == $item->id ? 'active' : '' }}" style="border-top: none;">
                                     <i class='bx {{ $item->icon ?? 'bx-default-icon' }} me-3 font-20'></i>
-                                    <span>{{ $item->party_ledger_name }}</span>
+                                    <div class="voucher-details">
+                                        <div class="voucher-number">{{ $item->voucher_number }}</div>
+                                        <div class="voucher-type font-10">{{ $item->voucher_type }} | {{ \Carbon\Carbon::parse($item->voucher_date)->format('j F Y') }}</div>
+                                    </div>
                                     @if(isset($item->badge))
                                         <span class="badge bg-primary rounded-pill ms-auto">{{ $item->badge }}</span>
                                     @endif
@@ -57,7 +77,7 @@
             <div class="email-header d-xl-flex align-items-center padding-0" style="height: auto;">
                 <div class="d-flex align-items-center">
                     <div class="">
-                        <h4 class="my-1 text-info">{{ $saleItem->party_ledger_name }} </h4>
+                        <h4 class="my-1 text-info">{{ $voucherItem->party_ledger_name }} </h4>
                     </div>
                 </div>
             </div>
@@ -75,7 +95,7 @@
                                                 <div class="row">
                                                     <div class="col-lg-3">
                                                         <p class="mb-0 font-13">Issued Date</p>
-                                                        <h6>{{ \Carbon\Carbon::parse($saleItem->voucher_date)->format('j F Y') }}</h6>
+                                                        <h6>{{ \Carbon\Carbon::parse($voucherItem->voucher_date)->format('j F Y') }}</h6>
                                                     </div>
                                                     <div class="col-lg-3">
                                                         <p class="mb-0 font-13">Amount</p>
@@ -107,12 +127,12 @@
                             <div class="col">
                                 <div class="accordion" id="accordionExample">
 
-                                    @include('superadmin.sales._accordion_item_one');
-                                    @include('superadmin.sales._accordion_item_two');
-                                    @include('superadmin.sales._accordion_item_six');
-                                    @include('superadmin.sales._accordion_item_four');
-                                    @include('superadmin.sales._accordion_item_five');
-                                    @include('superadmin.sales._accordion_item_three');
+                                    @include('superadmin.reports.accordion._accordion_item_one');
+                                    @include('superadmin.reports.accordion._accordion_item_two');
+                                    @include('superadmin.reports.accordion._accordion_item_six');
+                                    @include('superadmin.reports.accordion._accordion_item_four');
+                                    @include('superadmin.reports.accordion._accordion_item_five');
+                                    @include('superadmin.reports.accordion._accordion_item_three');
                                     
                                 </div>
                             </div>
@@ -141,7 +161,7 @@
             processing: true,
             serverSide: true,
             paging: false,
-            ajax: '{{ route('sales.SaleItem.data', $saleItemId) }}',
+            ajax: '{{ route('reports.VoucherItem.data', $voucherItemId) }}',
             columns: [
                 { data: 'stock_item_name',name: 'stock_item_name'},
                 { data: 'gst_hsn_name', name: 'gst_hsn_name' },

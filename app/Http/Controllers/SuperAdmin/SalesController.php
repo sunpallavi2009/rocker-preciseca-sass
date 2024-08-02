@@ -13,6 +13,7 @@ use App\Models\TallyVoucher;
 use App\Models\TallyLedger;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log; 
+use Illuminate\Support\Collection;
 use App\DataTables\SuperAdmin\SalesDataTable;
 
 class SalesController extends Controller
@@ -26,8 +27,33 @@ class SalesController extends Controller
     public function AllSaleItemReports($saleItemId)
     {
         $saleItem = TallyVoucher::findOrFail($saleItemId);
+       
+        $saleItemName = TallyVoucher::where('party_ledger_name', $saleItem->party_ledger_name)->get();
+        $saleReceiptItem = $saleItemName->firstWhere('voucher_type', 'Receipt');
+        
+         // Check if $saleReceiptItem is not null
+         if ($saleReceiptItem) {
+            $voucherHeadsSaleReceipt = TallyVoucherHead::where('tally_voucher_id', $saleReceiptItem->id)
+                ->where('entry_type', 'credit')
+                ->get();
+        } else {
+            // Handle the case where $saleReceiptItem is null
+            $voucherHeadsSaleReceipt = collect(); // Or any default value you prefer
+        }
 
         $ledgerData = TallyLedger::where('language_name', $saleItem->party_ledger_name)->get();
+        if ($ledgerData instanceof \Illuminate\Support\Collection) {
+            $ledgerItem = $ledgerData->first();
+        } else {
+            $ledgerItem = $ledgerData; 
+        }
+
+        $creditPeriod = intval($ledgerItem->bill_credit_period ?? 0);
+        $voucherDate = \Carbon\Carbon::parse($saleItem->voucher_date);
+        $dueDate = $voucherDate->copy()->addDays($creditPeriod);
+        // dd($dueDate);
+
+        
         $voucherHeads = TallyVoucherHead::where('tally_voucher_id', $saleItemId)->get();
         $totalRoundOff = $voucherHeads->filter(function ($head) {
             return $head->ledger_name === 'Round Off';
@@ -53,6 +79,9 @@ class SalesController extends Controller
             'totalCountItems' => $totalCountItems,
             'uniqueGstLedgerSources' => $uniqueGstLedgerSources,
             'subtotalsamount' => $subtotalsamount,
+            'saleReceiptItem' => $saleReceiptItem,
+            'voucherHeadsSaleReceipt' => $voucherHeadsSaleReceipt,
+            'dueDate' => $dueDate,
             'saleItemId' => $saleItemId ,
             'menuItems' => $menuItems
         ]);

@@ -35,7 +35,7 @@
          <!--start email wrapper-->
          <div class="email-wrapper">
             <div class="email-sidebar">
-                <div class="email-sidebar-header d-grid"> <a href="javascript:;" class="btn btn-primary compose-mail-btn"><i class='bx bx-left-arrow-alt me-2'></i> Cash and Bank</a>
+                <div class="email-sidebar-header d-grid"> <a href="javascript:;" class="btn btn-primary compose-mail-btn"><i class='bx bx-left-arrow-alt me-2'></i> Voucher Head</a>
                 </div>
                 <div class="email-sidebar-content">
                     <div class="email-navigation" style="height: 530px;">

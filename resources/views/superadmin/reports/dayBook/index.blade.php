@@ -34,7 +34,7 @@
                                     </div>
                                     <div class="col-lg-2">
                                         <form id="voucherTypeForm">
-                                            <label for="voucher_type" class="form-label">Voucher Type</label>
+                                            <label for="voucher_type" class="form-label">Transaction Type</label>
                                             <select id="voucher_type" name="voucher_type" class="form-select">
                                                 <option value="">All</option>
                                                 <option value="Sales">Sale</option>

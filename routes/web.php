@@ -104,6 +104,10 @@ Route::middleware([
     Route::get('reports/VoucherHead/{VoucherHead}', [ReportController::class, 'AllVoucherHeadReports'])->name('reports.VoucherHead');
     Route::get('reports/VoucherHead/data/{VoucherHeadId}', [ReportController::class, 'getVoucherHeadData'])->name('reports.VoucherHead.data');
 
+    Route::get('reports/VoucherItem/{VoucherItem}', [ReportController::class, 'AllVoucherItemReports'])->name('reports.VoucherItem');
+    Route::get('reports/VoucherItem/data/{VoucherItemId}', [ReportController::class, 'getVoucherItemData'])->name('reports.VoucherItem.data');
+    Route::get('reports/VoucherItemPayment/{VoucherItem}', [ReportController::class, 'AllVoucherItemPaymentReports'])->name('reports.VoucherItemPayment');
+    Route::get('reports/VoucherItemReceipt/{VoucherItem}', [ReportController::class, 'AllVoucherItemReceiptReports'])->name('reports.VoucherItemReceipt');
 
 
     Route::resource('sales', SalesController::class);

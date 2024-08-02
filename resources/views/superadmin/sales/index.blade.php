@@ -93,33 +93,4 @@
             }
         });
     </script>
-    {{-- <script>
-        // Initialize date range picker
-        const dateRangeInput = document.querySelector(".date-range");
-        flatpickr(dateRangeInput, {
-            mode: "range",
-            altInput: true,
-            altFormat: "F j, Y",
-            dateFormat: "Y-m-d",
-            onChange: function(selectedDates, dateStr, instance) {
-                if (selectedDates.length === 2) {
-                    let [startDate, endDate] = selectedDates.map(date => date.toISOString().split('T')[0]);
-                    let url = new URL(window.location.href);
-                    url.searchParams.set('start_date', startDate);
-                    url.searchParams.set('end_date', endDate);
-                    window.location.href = url.toString();
-                }
-            }
-        });
-
-        // Reset filters on page load if needed
-        document.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const startDate = urlParams.get('start_date');
-            const endDate = urlParams.get('end_date');
-            if (startDate && endDate) {
-                dateRangeInput._flatpickr.setDate([startDate, endDate], false);
-            }
-        });
-    </script> --}}
 @endpush

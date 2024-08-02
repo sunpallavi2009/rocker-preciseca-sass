@@ -4,6 +4,7 @@ namespace App\DataTables\SuperAdmin;
 
 use Carbon\Carbon;
 use App\Models\TallyVoucher;
+use App\Models\TallyVoucherHead;
 use App\Facades\UtilityFacades;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Services\DataTable;
@@ -22,16 +23,12 @@ class SalesDataTable extends DataTable
             ->addColumn('entry_type', function ($entry) {
                 return $entry->entry_type; // Directly from the joined table
             })
-            ->addColumn('credit', function ($entry) {
-                // Return the credit amount if the entry type is credit
-                return $entry->entry_type === 'credit' ? number_format(abs($entry->amount), 2, '.', '') : '-';
-            })
             ->addColumn('debit', function ($entry) {
                 // Return the debit amount if the entry type is debit
                 return $entry->entry_type === 'debit' ? number_format(abs($entry->amount), 2, '.', '') : '-';
             })
             ->addColumn('parent', function ($entry) {
-                return $entry->parent; // Parent value from the joined tally_ledgers table
+                return $entry->parent;
             })
             ->addColumn('igst_amount', function ($entry) {
                 return number_format($entry->igst_amount ?? 0, 2, '.', '');
@@ -40,40 +37,82 @@ class SalesDataTable extends DataTable
                 return number_format($entry->round_off_amount ?? 0, 2, '.', '');
             })
             ->addColumn('difference_amount', function ($entry) {
-                // Calculate and display the difference amount
+                $saleReceiptItem = TallyVoucher::where('party_ledger_name', $entry->party_ledger_name)
+                    ->where('voucher_type', 'Receipt')
+                    ->first();
+                if ($saleReceiptItem) {
+                    $voucherHeadsSaleReceipt = TallyVoucherHead::where('tally_voucher_id', $saleReceiptItem->id)
+                        ->where('entry_type', 'credit')
+                        ->sum('amount');
+                }
+
+                $debit = $entry->entry_type === 'debit' ? number_format(abs($entry->amount), 2, '.', '') : '-';
+
                 $igstAmount = $entry->igst_amount ?? 0;
                 $roundOffAmount = $entry->round_off_amount ?? 0;
-                $difference = $igstAmount + $roundOffAmount; // Difference can be positive or negative
-                return number_format($difference, 2, '.', ''); // Maintain the sign
+
+                 $difference = (($debit - $voucherHeadsSaleReceipt) - ($igstAmount + $roundOffAmount));  
+                return number_format($difference, 2, '.', '');
             })
             ->addColumn('party_ledger_name', function ($entry) {
                 return '<a href="' . route('sales.items', ['SaleItem' => $entry->id]) . '">' . $entry->party_ledger_name . '</a>';
             })
+            ->addColumn('voucher_date', function ($entry) {
+                return Carbon::parse($entry->voucher_date)->format('j M Y');
+            })
+            ->addColumn('party_gst_in', function ($entry) {
+                return $entry->party_gst_in;
+            })
+            ->addColumn('due_date', function ($entry) {
+                $creditPeriod  = intval($entry->bill_credit_period);
+                $voucherDate   = Carbon::parse($entry->voucher_date);
+                $voucherCredit = $voucherDate->addDays($creditPeriod)->format('j M Y');
+                return $voucherCredit;
+            })
+            ->addColumn('overdue_day', function ($entry) {
+                $creditPeriod  = intval($entry->bill_credit_period);
+                $voucherDate   = Carbon::parse($entry->voucher_date);
+                $dueDate       = $voucherDate->addDays($creditPeriod);
+                $today         = Carbon::now();
+                
+                $overdueDays   = $today->gt($dueDate) ? $today->diffInDays($dueDate) : 0;
+                $overdueMonths = $today->diffInMonths($dueDate);
+                
+                if ($overdueMonths > 0) {
+                    $formatted = "{$overdueMonths} Months";
+                } elseif ($overdueDays > 0) {
+                    $formatted = "{$overdueDays} Days";
+                } else {
+                    $formatted = 'On Time';
+                }
+                return $overdueDays > 0 || $overdueMonths > 0 ? $formatted : $formatted;
+            })
+            
+            
             ->rawColumns(['party_ledger_name']);
     }
 
     public function query(TallyVoucher $model)
     {
         $query = $model->newQuery()
-            ->select('tally_vouchers.*', 'tally_voucher_heads.entry_type', 'tally_voucher_heads.amount', 'tally_ledgers.parent')
+            ->select('tally_vouchers.*', 'tally_voucher_heads.entry_type', 'tally_voucher_heads.amount', 'tally_ledgers.parent', 'tally_ledgers.bill_credit_period', 'tally_ledgers.party_gst_in')
             ->leftJoin('tally_voucher_heads', function($join) {
                 $join->on('tally_vouchers.party_ledger_name', '=', 'tally_voucher_heads.ledger_name')
                     ->on('tally_vouchers.id', '=', 'tally_voucher_heads.tally_voucher_id');
             })
             ->leftJoin('tally_ledgers', 'tally_vouchers.party_ledger_name', '=', 'tally_ledgers.language_name')
-        ->leftJoin('tally_voucher_heads as related_heads', 'tally_voucher_heads.tally_voucher_id', '=', 'related_heads.tally_voucher_id')
-        ->groupBy('tally_vouchers.id', 'tally_vouchers.party_ledger_name', 'tally_vouchers.voucher_date', 'tally_vouchers.voucher_number', 'tally_vouchers.voucher_type', 'tally_ledgers.parent', 'tally_voucher_heads.entry_type', 'tally_voucher_heads.amount')
-        ->selectRaw('GROUP_CONCAT(DISTINCT related_heads.ledger_name) as related_ledger_names')
-        ->selectRaw('SUM(CASE WHEN related_heads.ledger_name LIKE "%IGST @18%" THEN related_heads.amount ELSE 0 END) as igst_amount')
-        ->selectRaw('SUM(CASE WHEN related_heads.ledger_name LIKE "%Round Off%" THEN related_heads.amount ELSE 0 END) as round_off_amount');
-
+            ->leftJoin('tally_voucher_heads as related_heads', 'tally_voucher_heads.tally_voucher_id', '=', 'related_heads.tally_voucher_id')
+            ->groupBy('tally_vouchers.id', 'tally_vouchers.party_ledger_name', 'tally_vouchers.voucher_date', 'tally_vouchers.voucher_number', 'tally_vouchers.voucher_type', 'tally_ledgers.parent', 'tally_ledgers.bill_credit_period', 'tally_ledgers.party_gst_in', 'tally_voucher_heads.entry_type', 'tally_voucher_heads.amount')
+            ->selectRaw('GROUP_CONCAT(DISTINCT related_heads.ledger_name) as related_ledger_names')
+            ->selectRaw('SUM(CASE WHEN related_heads.ledger_name LIKE "%IGST @18%" THEN related_heads.amount ELSE 0 END) as igst_amount')
+            ->selectRaw('SUM(CASE WHEN related_heads.ledger_name LIKE "%Round Off%" THEN related_heads.amount ELSE 0 END) as round_off_amount');
 
         $query->where('tally_vouchers.voucher_type', 'Sales');
-    
+
         if (request()->has('start_date') && request()->has('end_date')) {
             $startDate = request('start_date');
             $endDate = request('end_date');
-    
+
             if ($startDate && $endDate) {
                 try {
                     $startDate = Carbon::parse($startDate)->startOfDay();
@@ -84,9 +123,10 @@ class SalesDataTable extends DataTable
                 }
             }
         }
-    
+
         return $query;
     }
+
 
     public function html()
     {
@@ -162,6 +202,9 @@ class SalesDataTable extends DataTable
             Column::make('voucher_number')->title(__('Invoice Number')),
             Column::make('debit')->title(__('Invoice Amount')),
             Column::make('difference_amount')->title(__('Pending Amount')),
+            Column::make('due_date')->title(__('Due Date')),
+            Column::make('overdue_day')->title(__('Overdue By Days'))->addClass('text-center text-danger'),
+            Column::make('party_gst_in')->title(__('GSTIN')),
             Column::make('place_of_supply')->title(__('Place Of Supply')),
         ];
     }

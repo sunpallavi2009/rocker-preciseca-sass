@@ -29,7 +29,11 @@ class ReceiptRegisterDataTable extends DataTable
             ->addColumn('debit', function ($entry) {
                 // Return the debit amount if the entry type is debit
                 return $entry->entry_type === 'debit' ? number_format(abs($entry->amount), 2, '.', '') : '-';
-            });
+            })
+            ->addColumn('party_ledger_name', function ($entry) {
+                return '<a href="' . route('reports.VoucherItemReceipt', ['VoucherItem' => $entry->id]) . '">' . $entry->party_ledger_name . '</a>';
+            })
+            ->rawColumns(['party_ledger_name']);
     }
 
     public function query(TallyVoucher $model)
@@ -131,7 +135,7 @@ class ReceiptRegisterDataTable extends DataTable
     protected function getColumns()
     {
         return [
-            Column::make('No')->data('DT_RowIndex')->name('DT_RowIndex')->searchable(false)->orderable(false),
+            // Column::make('No')->data('DT_RowIndex')->name('DT_RowIndex')->searchable(false)->orderable(false),
             // Column::make('guid')->title(__('Guid')),
             Column::make('voucher_date')->title(__('Date')),
             Column::make('party_ledger_name')->title(__('Ledger')),
