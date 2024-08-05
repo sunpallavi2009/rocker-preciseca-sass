@@ -206,6 +206,8 @@ class LedgerController extends Controller
                             'applicable_from' => $applicableFrom,
                             'ledger_gst_registration_type' => $ledgerData['LEDGSTREGDETAILS.LIST']['GSTREGISTRATIONTYPE'] ?? null,
                             'gst_in' => $ledgerData['LEDGSTREGDETAILS.LIST']['GSTIN'] ?? null,
+                            'email' => $ledgerData['EMAIL'] ?? null,
+                            'phone_no' => $ledgerData['LEDGERMOBILE'] ?? null,
                             'mailing_applicable_from' => $mailingApplicableFrom,
                             'pincode' => $ledgerData['LEDMAILINGDETAILS.LIST']['PINCODE'] ?? null,
                             'mailing_name' => html_entity_decode($ledgerData['LEDMAILINGDETAILS.LIST']['MAILINGNAME'] ?? null),

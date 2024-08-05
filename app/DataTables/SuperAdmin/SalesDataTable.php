@@ -204,7 +204,7 @@ class SalesDataTable extends DataTable
             Column::make('difference_amount')->title(__('Pending Amount')),
             Column::make('due_date')->title(__('Due Date')),
             Column::make('overdue_day')->title(__('Overdue By Days'))->addClass('text-center text-danger'),
-            Column::make('party_gst_in')->title(__('GSTIN')),
+            Column::make('gst_in')->title(__('GSTIN')),
             Column::make('place_of_supply')->title(__('Place Of Supply')),
             Column::make('phone_no')->title(__('Phone No')),
             Column::make('email')->title(__('Email')),
