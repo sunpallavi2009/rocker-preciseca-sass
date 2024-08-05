@@ -42,6 +42,8 @@ return new class extends Migration
             $table->date('applicable_from')->nullable();
             $table->string('ledger_gst_registration_type')->nullable();
             $table->string('gst_in')->nullable();
+            $table->string('phone_no')->nullable();
+            $table->string('email')->nullable();
             $table->date('mailing_applicable_from')->nullable();
             $table->string('pincode')->nullable();
             $table->string('mailing_name')->nullable();

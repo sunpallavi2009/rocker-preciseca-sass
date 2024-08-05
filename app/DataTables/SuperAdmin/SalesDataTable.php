@@ -60,8 +60,8 @@ class SalesDataTable extends DataTable
             ->addColumn('voucher_date', function ($entry) {
                 return Carbon::parse($entry->voucher_date)->format('j M Y');
             })
-            ->addColumn('party_gst_in', function ($entry) {
-                return $entry->party_gst_in;
+            ->addColumn('gst_in', function ($entry) {
+                return $entry->gst_in;
             })
             ->addColumn('due_date', function ($entry) {
                 $creditPeriod  = intval($entry->bill_credit_period);
@@ -95,14 +95,14 @@ class SalesDataTable extends DataTable
     public function query(TallyVoucher $model)
     {
         $query = $model->newQuery()
-            ->select('tally_vouchers.*', 'tally_voucher_heads.entry_type', 'tally_voucher_heads.amount', 'tally_ledgers.parent', 'tally_ledgers.bill_credit_period', 'tally_ledgers.party_gst_in')
+            ->select('tally_vouchers.*', 'tally_voucher_heads.entry_type', 'tally_voucher_heads.amount', 'tally_ledgers.parent', 'tally_ledgers.bill_credit_period', 'tally_ledgers.gst_in', 'tally_ledgers.phone_no', 'tally_ledgers.email')
             ->leftJoin('tally_voucher_heads', function($join) {
                 $join->on('tally_vouchers.party_ledger_name', '=', 'tally_voucher_heads.ledger_name')
                     ->on('tally_vouchers.id', '=', 'tally_voucher_heads.tally_voucher_id');
             })
             ->leftJoin('tally_ledgers', 'tally_vouchers.party_ledger_name', '=', 'tally_ledgers.language_name')
             ->leftJoin('tally_voucher_heads as related_heads', 'tally_voucher_heads.tally_voucher_id', '=', 'related_heads.tally_voucher_id')
-            ->groupBy('tally_vouchers.id', 'tally_vouchers.party_ledger_name', 'tally_vouchers.voucher_date', 'tally_vouchers.voucher_number', 'tally_vouchers.voucher_type', 'tally_ledgers.parent', 'tally_ledgers.bill_credit_period', 'tally_ledgers.party_gst_in', 'tally_voucher_heads.entry_type', 'tally_voucher_heads.amount')
+            ->groupBy('tally_vouchers.id', 'tally_vouchers.party_ledger_name', 'tally_vouchers.voucher_date', 'tally_vouchers.voucher_number', 'tally_vouchers.voucher_type', 'tally_ledgers.parent', 'tally_ledgers.bill_credit_period', 'tally_ledgers.gst_in', 'tally_ledgers.phone_no', 'tally_ledgers.email', 'tally_voucher_heads.entry_type', 'tally_voucher_heads.amount')
             ->selectRaw('GROUP_CONCAT(DISTINCT related_heads.ledger_name) as related_ledger_names')
             ->selectRaw('SUM(CASE WHEN related_heads.ledger_name LIKE "%IGST @18%" THEN related_heads.amount ELSE 0 END) as igst_amount')
             ->selectRaw('SUM(CASE WHEN related_heads.ledger_name LIKE "%Round Off%" THEN related_heads.amount ELSE 0 END) as round_off_amount');
@@ -206,6 +206,9 @@ class SalesDataTable extends DataTable
             Column::make('overdue_day')->title(__('Overdue By Days'))->addClass('text-center text-danger'),
             Column::make('party_gst_in')->title(__('GSTIN')),
             Column::make('place_of_supply')->title(__('Place Of Supply')),
+            Column::make('phone_no')->title(__('Phone No')),
+            Column::make('email')->title(__('Email')),
+            Column::make('narration')->title(__('Narration')),
         ];
     }
 

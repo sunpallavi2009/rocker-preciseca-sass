@@ -40,6 +40,7 @@ class SalesController extends Controller
             // Handle the case where $saleReceiptItem is null
             $voucherHeadsSaleReceipt = collect(); // Or any default value you prefer
         }
+        // dd($saleReceiptItem);
 
         $ledgerData = TallyLedger::where('language_name', $saleItem->party_ledger_name)->get();
         if ($ledgerData instanceof \Illuminate\Support\Collection) {
@@ -47,6 +48,7 @@ class SalesController extends Controller
         } else {
             $ledgerItem = $ledgerData; 
         }
+        // dd($ledgerItem);
 
         $creditPeriod = intval($ledgerItem->bill_credit_period ?? 0);
         $voucherDate = \Carbon\Carbon::parse($saleItem->voucher_date);
