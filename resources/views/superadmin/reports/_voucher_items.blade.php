@@ -184,12 +184,13 @@
                         return data ? data + '%' : '-';
                     }
                 },
-                { 
+                {
                     data: 'amount', name: 'amount', className: 'text-end',
                     render: function(data, type, row) {
-                        return data ? parseFloat(data).toFixed(2) : '0.00';
+                        return data ? parseFloat(Math.abs(data)).toFixed(2) : '0.00';
                     }
                 }
+
             ],
                 footerCallback: function(row, data, start, end, display) {
                     var api = this.api();
@@ -204,36 +205,40 @@
 
                     var subtotal = api.column(6, { page: 'all' }) .data().reduce(function(a, b) { return intVal(a) + intVal(b); }, 0);
 
-                    $('#subtotal').text(subtotal.toFixed(2));
+                    $('#subtotal').text(Math.abs(subtotal).toFixed(2));
                     
-                    var roundOff = parseFloat($('#roundOff').text().replace(/[\₹,]/g, '')) || 0;
-                    var igst18 = parseFloat($('#igst18').text().replace(/[\₹,]/g, '')) || 0;
                     
+                    var gstVoucherHeadAmount = 0;
+                    $('[data-amount]').each(function() {
+                        var amount = parseFloat($(this).attr('data-amount')) || 0;
+                        gstVoucherHeadAmount += amount;
+                    });
 
                     // Calculate Total Invoice Value
-                    var totalInvoiceValue = subtotal + roundOff + igst18;
+                    var totalInvoiceValue = subtotal + gstVoucherHeadAmount;
 
-                    // Update Total Invoice Value in the footer
-                    $('#totalInvoiceValue').text(totalInvoiceValue.toFixed(2));
-
-                    $('#totalInvoiceAmount').text(totalInvoiceValue.toFixed(2));
-                    $('#totalLedgerAmount').text(totalInvoiceValue.toFixed(2));
-                    $('#totalPaymentInvoiceAmount').text(totalInvoiceValue.toFixed(2));
+                    $('#totalInvoiceValue').text(Math.abs(totalInvoiceValue).toFixed(2));
+                    $('#totalInvoiceAmount').text(Math.abs(totalInvoiceValue).toFixed(2));
+                    $('#totalLedgerAmount').text(Math.abs(totalInvoiceValue).toFixed(2));
+                    $('#totalPaymentInvoiceAmount').text(Math.abs(totalInvoiceValue).toFixed(2));
 
                     // Calculate and Update Pending Due Amount
                     var creditAmountText = $('[id$="creditAmount"]').text();
                     var creditAmount = parseFloat(creditAmountText.replace(/[\₹,]/g, '')) || 0;
 
-
                     var totalPaymentInvoiceAmount = parseFloat($('#totalPaymentInvoiceAmount').text().replace(/[\₹,]/g, '')) || 0;
                     var pendingDue = totalPaymentInvoiceAmount - creditAmount;
 
 
+                    console.log('creditAmount:',creditAmount);
+                    console.log('pendingDue:',pendingDue);
+                    console.log('gstVoucherHeadAmount:',gstVoucherHeadAmount);
 
-                    var totalPendingAmount = ((roundOff + igst18) - pendingDue);
+                    // var totalPendingAmount = ((gstVoucherHeadAmount) - pendingDue);
+                    // console.log('totalPendingAmount:',totalPendingAmount);
 
                     $('#pendingDue').text(new Intl.NumberFormat('en-IN').format(pendingDue));
-                    $('#totalPendingAmount').text(new Intl.NumberFormat('en-IN').format(totalPendingAmount));
+                    $('#totalPendingAmount').text(new Intl.NumberFormat('en-IN').format(gstVoucherHeadAmount));
                 }
         });
     });

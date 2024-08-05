@@ -35,7 +35,7 @@ class ReportController extends Controller
             'menuItems' => $menuItems
         ]);
     }
-    
+
     public function getVoucherHeadData($cashBankLedgerId)
     {
         $cashBankLedger = TallyLedger::where('guid', $cashBankLedgerId)->firstOrFail();
@@ -71,15 +71,16 @@ class ReportController extends Controller
             ->make(true);
     }
 
+
     public function AllVoucherItemReports($voucherItemId)
     {
         $voucherItem = TallyVoucher::findOrFail($voucherItemId);
-    
+       
         $voucherItemName = TallyVoucher::where('party_ledger_name', $voucherItem->party_ledger_name)->get();
         $saleReceiptItem = $voucherItemName->firstWhere('voucher_type', 'Receipt');
-
-        // Check if $saleReceiptItem is not null
-        if ($saleReceiptItem) {
+    
+         // Check if $saleReceiptItem is not null
+         if ($saleReceiptItem) {
             $voucherHeadsSaleReceipt = TallyVoucherHead::where('tally_voucher_id', $saleReceiptItem->id)
                 ->where('entry_type', 'credit')
                 ->get();
@@ -87,6 +88,7 @@ class ReportController extends Controller
             // Handle the case where $saleReceiptItem is null
             $voucherHeadsSaleReceipt = collect(); // Or any default value you prefer
         }
+        // dd($voucherHeadsSaleReceipt);
 
         $ledgerData = TallyLedger::where('language_name', $voucherItem->party_ledger_name)->get();
         if ($ledgerData instanceof \Illuminate\Support\Collection) {
@@ -94,42 +96,104 @@ class ReportController extends Controller
         } else {
             $ledgerItem = $ledgerData; 
         }
+        // dd($ledgerItem);
 
         $creditPeriod = intval($ledgerItem->bill_credit_period ?? 0);
         $voucherDate = \Carbon\Carbon::parse($voucherItem->voucher_date);
         $dueDate = $voucherDate->copy()->addDays($creditPeriod);
+        // dd($dueDate);
+
         
         $voucherHeads = TallyVoucherHead::where('tally_voucher_id', $voucherItemId)->get();
-        $totalRoundOff = $voucherHeads->filter(function ($head) {
-            return $head->ledger_name === 'Round Off';
-        })->sum('amount');
-        $totalIGST18 = $voucherHeads->filter(function ($head) {
-            return $head->ledger_name === 'IGST @18%';
-        })->sum('amount');
+        $gstVoucherHeads = $voucherHeads->filter(function ($voucherHead) use ($voucherItem) {
+            return $voucherHead->ledger_name !== $voucherItem->party_ledger_name;
+        });
+
+        // dd($voucherHeads);
+       
         
         $voucherItems = TallyVoucherItem::where('tally_voucher_id', $voucherItemId)->get();
         $uniqueGstLedgerSources = $voucherItems->pluck('gst_ledger_source')->unique();
         $totalCountItems = TallyVoucherItem::where('tally_voucher_id', $voucherItemId)->count();
         $subtotalsamount = $voucherItems->sum('amount');
 
-        $menuItems = TallyVoucher::get();
+        $menuItems = TallyVoucher::where('voucher_type', 'Sales')->get();
 
         return view('superadmin.reports._voucher_items', [
             'voucherItem' => $voucherItem,
             'ledgerData' => $ledgerData,
             'voucherHeads' => $voucherHeads,
-            'totalRoundOff' => $totalRoundOff,
-            'totalIGST18' => $totalIGST18,
+            'gstVoucherHeads' => $gstVoucherHeads,
             'totalCountItems' => $totalCountItems,
             'uniqueGstLedgerSources' => $uniqueGstLedgerSources,
             'subtotalsamount' => $subtotalsamount,
             'saleReceiptItem' => $saleReceiptItem,
             'voucherHeadsSaleReceipt' => $voucherHeadsSaleReceipt,
             'dueDate' => $dueDate,
-            'voucherItemId' => $voucherItemId,
+            'voucherItemId' => $voucherItemId ,
             'menuItems' => $menuItems
         ]);
     }
+
+    // public function AllVoucherItemReports($voucherItemId)
+    // {
+    //     $voucherItem = TallyVoucher::findOrFail($voucherItemId);
+    
+    //     $voucherItemName = TallyVoucher::where('party_ledger_name', $voucherItem->party_ledger_name)->get();
+    //     $saleReceiptItem = $voucherItemName->firstWhere('voucher_type', 'Receipt');
+
+    //     // Check if $saleReceiptItem is not null
+    //     if ($saleReceiptItem) {
+    //         $voucherHeadsSaleReceipt = TallyVoucherHead::where('tally_voucher_id', $saleReceiptItem->id)
+    //             ->where('entry_type', 'credit')
+    //             ->get();
+    //     } else {
+    //         // Handle the case where $saleReceiptItem is null
+    //         $voucherHeadsSaleReceipt = collect(); // Or any default value you prefer
+    //     }
+
+    //     $ledgerData = TallyLedger::where('language_name', $voucherItem->party_ledger_name)->get();
+    //     if ($ledgerData instanceof \Illuminate\Support\Collection) {
+    //         $ledgerItem = $ledgerData->first();
+    //     } else {
+    //         $ledgerItem = $ledgerData; 
+    //     }
+
+    //     $creditPeriod = intval($ledgerItem->bill_credit_period ?? 0);
+    //     $voucherDate = \Carbon\Carbon::parse($voucherItem->voucher_date);
+    //     $dueDate = $voucherDate->copy()->addDays($creditPeriod);
+        
+    //     $voucherHeads = TallyVoucherHead::where('tally_voucher_id', $voucherItemId)->get();
+    //     $totalRoundOff = $voucherHeads->filter(function ($head) {
+    //         return $head->ledger_name === 'Round Off';
+    //     })->sum('amount');
+    //     $totalIGST18 = $voucherHeads->filter(function ($head) {
+    //         return $head->ledger_name === 'IGST @18%';
+    //     })->sum('amount');
+        
+    //     $voucherItems = TallyVoucherItem::where('tally_voucher_id', $voucherItemId)->get();
+    //     $uniqueGstLedgerSources = $voucherItems->pluck('gst_ledger_source')->unique();
+    //     $totalCountItems = TallyVoucherItem::where('tally_voucher_id', $voucherItemId)->count();
+    //     $subtotalsamount = $voucherItems->sum('amount');
+
+    //     $menuItems = TallyVoucher::get();
+
+    //     return view('superadmin.reports._voucher_items', [
+    //         'voucherItem' => $voucherItem,
+    //         'ledgerData' => $ledgerData,
+    //         'voucherHeads' => $voucherHeads,
+    //         'totalRoundOff' => $totalRoundOff,
+    //         'totalIGST18' => $totalIGST18,
+    //         'totalCountItems' => $totalCountItems,
+    //         'uniqueGstLedgerSources' => $uniqueGstLedgerSources,
+    //         'subtotalsamount' => $subtotalsamount,
+    //         'saleReceiptItem' => $saleReceiptItem,
+    //         'voucherHeadsSaleReceipt' => $voucherHeadsSaleReceipt,
+    //         'dueDate' => $dueDate,
+    //         'voucherItemId' => $voucherItemId,
+    //         'menuItems' => $menuItems
+    //     ]);
+    // }
 
 
 

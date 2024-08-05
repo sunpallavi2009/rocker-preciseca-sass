@@ -25,6 +25,7 @@
                         <li class="breadcrumb-item"><a href="javascript:;"><i class="bx bx-home-alt"></i></a>
                         </li>
                         <li class="breadcrumb-item active" aria-current="page">Sales</li>
+                        
                     </ol>
                 </nav>
             </div>
@@ -58,7 +59,7 @@
             <div class="email-header d-xl-flex align-items-center padding-0" style="height: auto;">
                 <div class="d-flex align-items-center">
                     <div class="">
-                        <h4 class="my-1 text-info">{{ $saleItem->party_ledger_name }} </h4>
+                        <h4 class="my-1 text-info">{{ $saleItem->party_ledger_name }} | {{ $saleItem->voucher_type }}</h4>
                     </div>
                 </div>
             </div>
@@ -95,7 +96,7 @@
                                             <div class="col-lg-3" style="padding: 25px;background: #e7d9d9;border-bottom-right-radius: 15px;border-top-right-radius: 15px;">
                                                 <div class="col-lg-12">
                                                             <p class="mb-0 font-13">Status</p>
-                                                            <h6 class="text-info">Status</h6>
+                                                            <h6 class="text-info"><p>{{ $saleItem->voucher_number }}</p></h6>
                                                 </div>
                                             </div>
                                         </div>
@@ -165,12 +166,13 @@
                         return data ? data + '%' : '-';
                     }
                 },
-                { 
+                {
                     data: 'amount', name: 'amount', className: 'text-end',
                     render: function(data, type, row) {
-                        return data ? parseFloat(data).toFixed(2) : '0.00';
+                        return data ? parseFloat(Math.abs(data)).toFixed(2) : '0.00';
                     }
                 }
+
             ],
                 footerCallback: function(row, data, start, end, display) {
                     var api = this.api();
@@ -185,33 +187,46 @@
 
                     var subtotal = api.column(6, { page: 'all' }) .data().reduce(function(a, b) { return intVal(a) + intVal(b); }, 0);
 
-                    $('#subtotal').text(subtotal.toFixed(2));
+                    $('#subtotal').text(Math.abs(subtotal).toFixed(2));
                     
-                    var roundOff = parseFloat($('#roundOff').text().replace(/[\₹,]/g, '')) || 0;
-                    var igst18 = parseFloat($('#igst18').text().replace(/[\₹,]/g, '')) || 0;
                     
+                    var gstVoucherHeadAmount = 0;
+                    $('[data-amount]').each(function() {
+                        var amount = parseFloat($(this).attr('data-amount')) || 0;
+                        gstVoucherHeadAmount += amount;
+                    });
 
                     // Calculate Total Invoice Value
-                    var totalInvoiceValue = subtotal + roundOff + igst18;
+                    var totalInvoiceValue = subtotal + gstVoucherHeadAmount;
 
-                    // Update Total Invoice Value in the footer
-                    $('#totalInvoiceValue').text(totalInvoiceValue.toFixed(2));
-
-                    $('#totalInvoiceAmount').text(totalInvoiceValue.toFixed(2));
-                    $('#totalLedgerAmount').text(totalInvoiceValue.toFixed(2));
-                    $('#totalPaymentInvoiceAmount').text(totalInvoiceValue.toFixed(2));
+                    $('#totalInvoiceValue').text(Math.abs(totalInvoiceValue).toFixed(2));
+                    $('#totalInvoiceAmount').text(Math.abs(totalInvoiceValue).toFixed(2));
+                    $('#totalLedgerAmount').text(Math.abs(totalInvoiceValue).toFixed(2));
+                    $('#totalPaymentInvoiceAmount').text(Math.abs(totalInvoiceValue).toFixed(2));
 
                     // Calculate and Update Pending Due Amount
                     var creditAmountText = $('[id$="creditAmount"]').text();
                     var creditAmount = parseFloat(creditAmountText.replace(/[\₹,]/g, '')) || 0;
 
-
                     var totalPaymentInvoiceAmount = parseFloat($('#totalPaymentInvoiceAmount').text().replace(/[\₹,]/g, '')) || 0;
                     var pendingDue = totalPaymentInvoiceAmount - creditAmount;
 
 
+                    var VoucherHeadCreditAmount = 0;
+                    $('[credit-amount]').each(function() {
+                        var amount = parseFloat($(this).attr('credit-amount')) || 0;
+                        VoucherHeadCreditAmount += amount;
+                    });
+                    console.log('VoucherHeadCreditAmount:',VoucherHeadCreditAmount);
 
-                    var totalPendingAmount = ((roundOff + igst18) - pendingDue);
+                    var VoucherHeadDebitAmount = 0;
+                    $('[debit-amount]').each(function() {
+                        var amount = parseFloat($(this).attr('debit-amount')) || 0;
+                        VoucherHeadDebitAmount += amount;
+                    });
+                    console.log('VoucherHeadDebitAmount:',VoucherHeadDebitAmount);
+                    var totalPendingAmount = VoucherHeadCreditAmount + VoucherHeadDebitAmount;
+
 
                     $('#pendingDue').text(new Intl.NumberFormat('en-IN').format(pendingDue));
                     $('#totalPendingAmount').text(new Intl.NumberFormat('en-IN').format(totalPendingAmount));

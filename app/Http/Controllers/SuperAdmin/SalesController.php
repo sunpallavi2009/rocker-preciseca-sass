@@ -30,7 +30,7 @@ class SalesController extends Controller
        
         $saleItemName = TallyVoucher::where('party_ledger_name', $saleItem->party_ledger_name)->get();
         $saleReceiptItem = $saleItemName->firstWhere('voucher_type', 'Receipt');
-        
+    
          // Check if $saleReceiptItem is not null
          if ($saleReceiptItem) {
             $voucherHeadsSaleReceipt = TallyVoucherHead::where('tally_voucher_id', $saleReceiptItem->id)
@@ -40,7 +40,7 @@ class SalesController extends Controller
             // Handle the case where $saleReceiptItem is null
             $voucherHeadsSaleReceipt = collect(); // Or any default value you prefer
         }
-        // dd($saleReceiptItem);
+        // dd($voucherHeadsSaleReceipt);
 
         $ledgerData = TallyLedger::where('language_name', $saleItem->party_ledger_name)->get();
         if ($ledgerData instanceof \Illuminate\Support\Collection) {
@@ -57,12 +57,11 @@ class SalesController extends Controller
 
         
         $voucherHeads = TallyVoucherHead::where('tally_voucher_id', $saleItemId)->get();
-        $totalRoundOff = $voucherHeads->filter(function ($head) {
-            return $head->ledger_name === 'Round Off';
-        })->sum('amount');
-        $totalIGST18 = $voucherHeads->filter(function ($head) {
-            return $head->ledger_name === 'IGST @18%';
-        })->sum('amount');
+        $gstVoucherHeads = $voucherHeads->filter(function ($voucherHead) use ($saleItem) {
+            return $voucherHead->ledger_name !== $saleItem->party_ledger_name;
+        });
+
+        // dd($voucherHeads);
        
         
         $voucherItems = TallyVoucherItem::where('tally_voucher_id', $saleItemId)->get();
@@ -76,8 +75,7 @@ class SalesController extends Controller
             'saleItem' => $saleItem,
             'ledgerData' => $ledgerData,
             'voucherHeads' => $voucherHeads,
-            'totalRoundOff' => $totalRoundOff,
-            'totalIGST18' => $totalIGST18,
+            'gstVoucherHeads' => $gstVoucherHeads,
             'totalCountItems' => $totalCountItems,
             'uniqueGstLedgerSources' => $uniqueGstLedgerSources,
             'subtotalsamount' => $subtotalsamount,

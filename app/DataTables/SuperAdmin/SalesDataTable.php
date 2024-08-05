@@ -37,21 +37,24 @@ class SalesDataTable extends DataTable
                 return number_format($entry->round_off_amount ?? 0, 2, '.', '');
             })
             ->addColumn('difference_amount', function ($entry) {
+                $voucherHeadsSaleReceipt = 0;
+    
                 $saleReceiptItem = TallyVoucher::where('party_ledger_name', $entry->party_ledger_name)
                     ->where('voucher_type', 'Receipt')
                     ->first();
+                    
                 if ($saleReceiptItem) {
                     $voucherHeadsSaleReceipt = TallyVoucherHead::where('tally_voucher_id', $saleReceiptItem->id)
                         ->where('entry_type', 'credit')
                         ->sum('amount');
                 }
-
-                $debit = $entry->entry_type === 'debit' ? number_format(abs($entry->amount), 2, '.', '') : '-';
-
+    
+                $debit = $entry->entry_type === 'debit' ? number_format(abs($entry->amount), 2, '.', '') : 0;
+    
                 $igstAmount = $entry->igst_amount ?? 0;
                 $roundOffAmount = $entry->round_off_amount ?? 0;
-
-                 $difference = (($debit - $voucherHeadsSaleReceipt) - ($igstAmount + $roundOffAmount));  
+    
+                $difference = (($debit - $voucherHeadsSaleReceipt) - ($igstAmount + $roundOffAmount));
                 return number_format($difference, 2, '.', '');
             })
             ->addColumn('party_ledger_name', function ($entry) {

@@ -25,16 +25,14 @@
                             <th style="text-align:right">Subtotal</th>
                             <th style="text-align:right" id="subtotal"></th>
                         </tr>
-                        <tr>
-                            <th colspan="5"></th>
-                            <th style="text-align:right">IGST @18%</th>
-                            <th style="text-align:right" id="igst18">{{ $totalIGST18 }}</th>
-                        </tr>
-                        <tr>
-                            <th colspan="5"></th>
-                            <th style="text-align:right">Round off</th>
-                            <th style="text-align:right" id="roundOff">{{ $totalRoundOff }}</th>
-                        </tr>
+                        @foreach($gstVoucherHeads as $gstVoucherHead)
+                                <tr>
+                                    <th colspan="5"></th>
+                                    <th style="text-align:right">{{ $gstVoucherHead->ledger_name }}</th>
+                                    <th style="text-align:right" data-amount="{{ $gstVoucherHead->amount }}">{{ number_format(abs($gstVoucherHead->amount), 2) }}</th>
+
+                                </tr>
+                        @endforeach
                         <tr>
                             <th colspan="5"></th>
                             <th style="text-align:right">Total Invoice Value</th>

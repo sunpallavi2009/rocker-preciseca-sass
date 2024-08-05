@@ -16,28 +16,21 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>Round Off</td>
-                            <td>&#8377 {{ $totalRoundOff }}</td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td>IGST @18%</td>
-                            <td>&#8377 {{ $totalIGST18 }}</td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            @foreach($uniqueGstLedgerSources as $gstLedgerSource)
-                                <td>{{ $gstLedgerSource }}</td>
-                            @endforeach
-                            <td>&#8377 {{ $subtotalsamount }}</td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td>{{ $saleItem->party_ledger_name }}</td>
-                            <td></td>
-                            <td id="totalLedgerAmount"></td>
-                        </tr>
+                        @foreach($voucherHeads as $voucherHead)
+                            <tr>
+                                <th>{{ $voucherHead->ledger_name }}</th>
+                                @if($voucherHead->entry_type == 'credit')
+                                    <th credit-amount="{{ $voucherHead->amount }}">{{ number_format(abs($voucherHead->amount), 2) }}</th>
+                                    <th></th>
+                                @elseif($voucherHead->entry_type == 'debit')
+                                    <th></th>
+                                    <th debit-amount="{{ $voucherHead->amount }}">{{ number_format(abs($voucherHead->amount), 2) }}</th>
+                                @else
+                                    <th></th>
+                                    <th></th>
+                                @endif
+                            </tr>
+                        @endforeach 
                     </tbody>
                 </table>
             </div>
