@@ -77,7 +77,7 @@
             <div class="email-header d-xl-flex align-items-center padding-0" style="height: auto;">
                 <div class="d-flex align-items-center">
                     <div class="">
-                        <h4 class="my-1 text-info">{{ $voucherItem->party_ledger_name }} </h4>
+                        <h4 class="my-1 text-info">{{ $voucherItem->party_ledger_name }} | {{ $voucherItem->voucher_type }}</h4>
                     </div>
                 </div>
             </div>
@@ -99,7 +99,7 @@
                                                     </div>
                                                     <div class="col-lg-3">
                                                         <p class="mb-0 font-13">Amount</p>
-                                                        <h6 id="totalInvoiceAmount"></h6>
+                                                        <h6 id="VoucherHeadDebitAmount"></h6>
                                                     </div>
                                                     <div class="col-lg-3">
                                                         <p class="mb-0 font-13">Pending Amount</p>
@@ -114,7 +114,7 @@
                                             <div class="col-lg-3" style="padding: 25px;background: #e7d9d9;border-bottom-right-radius: 15px;border-top-right-radius: 15px;">
                                                 <div class="col-lg-12">
                                                             <p class="mb-0 font-13">Status</p>
-                                                            <h6 class="text-info">Status</h6>
+                                                            <h6 class="text-info">{{ $voucherItem->voucher_number }}</h6>
                                                 </div>
                                             </div>
                                         </div>
@@ -229,15 +229,26 @@
                     var totalPaymentInvoiceAmount = parseFloat($('#totalPaymentInvoiceAmount').text().replace(/[\₹,]/g, '')) || 0;
                     var pendingDue = totalPaymentInvoiceAmount - creditAmount;
 
-
-                    console.log('creditAmount:',creditAmount);
-                    console.log('pendingDue:',pendingDue);
-                    console.log('gstVoucherHeadAmount:',gstVoucherHeadAmount);
-
                     // var totalPendingAmount = ((gstVoucherHeadAmount) - pendingDue);
                     // console.log('totalPendingAmount:',totalPendingAmount);
 
+                    var VoucherHeadCreditAmount = 0;
+                    $('[credit-amount]').each(function() {
+                        var amount = parseFloat($(this).attr('credit-amount')) || 0;
+                        VoucherHeadCreditAmount += amount;
+                    });
+                    console.log('VoucherHeadCreditAmount:',VoucherHeadCreditAmount);
+
+                    var VoucherHeadDebitAmount = 0;
+                    $('[debit-amount]').each(function() {
+                        var amount = parseFloat($(this).attr('debit-amount')) || 0;
+                        VoucherHeadDebitAmount += amount;
+                    });
+                    console.log('VoucherHeadDebitAmount:',VoucherHeadDebitAmount);
+                    var totalPendingAmount = VoucherHeadCreditAmount + VoucherHeadDebitAmount;
+
                     $('#pendingDue').text(new Intl.NumberFormat('en-IN').format(pendingDue));
+                    $('#VoucherHeadDebitAmount').text(new Intl.NumberFormat('en-IN').format(VoucherHeadDebitAmount));
                     $('#totalPendingAmount').text(new Intl.NumberFormat('en-IN').format(gstVoucherHeadAmount));
                 }
         });

@@ -20,11 +20,11 @@
                             <tr>
                                 <th>{{ $voucherHead->ledger_name }}</th>
                                 @if($voucherHead->entry_type == 'credit')
-                                    <th>{{ number_format(abs($voucherHead->amount), 2) }}</th>
+                                    <th credit-amount="{{ $voucherHead->amount }}">{{ number_format(abs($voucherHead->amount), 2) }}</th>
                                     <th></th>
                                 @elseif($voucherHead->entry_type == 'debit')
                                     <th></th>
-                                    <th>{{ number_format(abs($voucherHead->amount), 2) }}</th>
+                                    <th debit-amount="{{ $voucherHead->amount }}">{{ number_format(abs($voucherHead->amount), 2) }}</th>
                                 @else
                                     <th></th>
                                     <th></th>

@@ -35,7 +35,7 @@
          <!--start email wrapper-->
          <div class="email-wrapper">
             <div class="email-sidebar">
-                <div class="email-sidebar-header d-grid"> <a href="javascript:;" class="btn btn-primary compose-mail-btn"><i class='bx bx-left-arrow-alt me-2'></i> Voucher Head</a>
+                <div class="email-sidebar-header d-grid"> <a href="javascript:;" class="btn btn-primary compose-mail-btn" onclick="history.back();"><i class='bx bx-left-arrow-alt me-2'></i> Voucher Head</a>
                 </div>
                 <div class="email-sidebar-content">
                     <div class="email-navigation" style="height: 530px;">
@@ -68,7 +68,7 @@
                 <div class="">
                     <div class="email-list">
                         <div class="table-responsive table-responsive-scroll  border-0">
-                            <table class="table table-striped" id="voucher-head-table">
+                            <table class="table table-striped" id="voucher-head-table" width="100%">
                                 <thead>
                                     <tr>
                                         {{-- <td>Name</td> --}}
@@ -123,6 +123,50 @@
 
 @include('layouts.includes.datatable-js')
 <script>
+    $(document).ready(function() {
+        let runningBalance = 0;
+
+        $('#voucher-head-table').DataTable({
+            processing: true,
+            serverSide: true,
+            paging: false,
+            ajax: '{{ route('reports.VoucherHead.data', $voucherHeadId) }}',
+            columns: [
+                {
+                    data: 'voucher_date',
+                    name: 'voucher_date'
+                },
+                { data: 'voucher_type', name: 'voucher_type', className: 'text-center' },
+                { data: 'voucher_number', name: 'voucher_number', className: 'text-center' },
+                { data: 'debit', name: 'debit', className: 'text-end' },
+                { data: 'credit', name: 'credit', className: 'text-end' },
+                { data: 'running_balance', name: 'running_balance', className: 'text-end', orderable: false, searchable: false }
+            ],
+            drawCallback: function(settings) {
+                var api = this.api();
+                let rows = api.rows({ page: 'current' }).data();
+                let totalDebit = 0;
+                let totalCredit = 0;
+                runningBalance = 0;
+
+                rows.each(function(row, index) {
+                    let debit = parseFloat(row.debit) || 0;
+                    let credit = parseFloat(row.credit) || 0;
+                    totalDebit += debit;
+                    totalCredit += credit;
+                    runningBalance += credit - debit;
+
+                    $(api.row(index).node()).find('td:eq(5)').html(Math.abs(runningBalance).toFixed(2));
+                });
+
+                $(api.column(3).footer()).html(totalDebit.toFixed(2));
+                $(api.column(4).footer()).html(totalCredit.toFixed(2));
+                $(api.column(5).footer()).html(Math.abs(runningBalance).toFixed(2));
+            }
+        });
+    });
+</script>
+{{-- <script>
     $(document).ready(function() {
         $('#voucher-head-table').DataTable({
             processing: true,
@@ -179,7 +223,7 @@
     });
 
 
-</script>
+</script> --}}
 
 
 @endpush

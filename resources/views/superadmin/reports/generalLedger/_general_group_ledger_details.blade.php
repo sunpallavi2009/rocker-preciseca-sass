@@ -35,7 +35,7 @@
          <!--start email wrapper-->
          <div class="email-wrapper">
             <div class="email-sidebar">
-                <div class="email-sidebar-header d-grid"> <a href="javascript:;" class="btn btn-primary compose-mail-btn"><i class='bx bx-left-arrow-alt me-2'></i> General Ledger</a>
+                <div class="email-sidebar-header d-grid"> <a href="javascript:;"  onclick="history.back();" class="btn btn-primary compose-mail-btn"><i class='bx bx-left-arrow-alt me-2'></i> General Ledger</a>
                 </div>
                 <div class="email-sidebar-content">
                     <div class="email-navigation" style="height: 530px;">
@@ -61,20 +61,6 @@
                         <h4 class="my-1 text-info">{{ $generalLedger->name }} </h4>
                     </div>
                 </div>
-
-                {{-- <div class="col-lg-12">
-                    <div class="col">
-                        <div class="card radius-10 border-start border-0 border-4 border-info">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center">
-                                    <div>
-                                        <h4 class="my-1 text-info">{{ $generalLedger->name }} </h4>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div> --}}
                
             </div>
             
@@ -82,17 +68,26 @@
                 <div class="">
                     <div class="email-list">
                         <div class="table-responsive table-responsive-scroll  border-0">
-                            <table class="table table-striped" id="general-group-ledger-table">
+                            <table class="table table-striped" id="general-group-ledger-table" width="100%">
                                 <thead>
                                     <tr>
                                         <td>Name</td>
-                                        <td>Parent</td>
+                                        {{-- <td>Parent</td> --}}
                                         <td>Opening Balance</td>
                                         <td>Debit</td>
                                         <td>Credit</td>
                                         <td>Closing Balance</td>
                                     </tr>
                                 </thead>
+                                <tfoot>
+                                    <tr>
+                                        <td>Total</td>
+                                        <td id="footer-opening-balance"></td>
+                                        <td id="footer-debit"></td>
+                                        <td id="footer-credit"></td>
+                                        <td id="footer-closing-balance"></td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
 
@@ -128,6 +123,56 @@
 @include('layouts.includes.datatable-js')
 <script>
     $(document).ready(function() {
+    $('#general-group-ledger-table').DataTable({
+        processing: true,
+        serverSide: true,
+        paging: false,
+        ajax: '{{ route('reports.GeneralGroupLedger.data', $generalLedgerId) }}',
+        columns: [
+            {
+                data: 'language_name',
+                name: 'language_name',
+                render: function(data, type, row) {
+                    var url = '{{ route("reports.VoucherHead", ":guid") }}';
+                    url = url.replace(':guid', row.guid);
+                    return '<a href="' + url + '" style="color: #337ab7;">' + data + '</a>';
+                }
+            },
+            { data: 'opening_balance', name: 'opening_balance', className: 'text-end' },
+            { data: 'debit', name: 'debit', className: 'text-end' },
+            { data: 'credit', name: 'credit', className: 'text-end' },
+            { data: 'closing_balance', name: 'closing_balance', className: 'text-end' }
+        ],
+        footerCallback: function(row, data, start, end, display) {
+            var api = this.api();
+
+            // Calculate totals
+            var totalOpeningBalance = api.column(1, { page: 'current' }).data().reduce(function(a, b) {
+                return (parseFloat(a) || 0) + (parseFloat(b) || 0);
+            }, 0);
+
+            var totalDebit = api.column(2, { page: 'current' }).data().reduce(function(a, b) {
+                return (parseFloat(a) || 0) + (parseFloat(b) || 0);
+            }, 0);
+
+            var totalCredit = api.column(3, { page: 'current' }).data().reduce(function(a, b) {
+                return (parseFloat(a) || 0) + (parseFloat(b) || 0);
+            }, 0);
+
+            var totalClosingBalance = totalOpeningBalance + totalDebit - totalCredit;
+
+            // Update footer
+            $(api.column(1).footer()).html(Math.abs(totalOpeningBalance).toFixed(2));
+            $(api.column(2).footer()).html(Math.abs(totalDebit).toFixed(2));
+            $(api.column(3).footer()).html(Math.abs(totalCredit).toFixed(2));
+            $(api.column(4).footer()).html(Math.abs(totalClosingBalance).toFixed(2));
+        }
+    });
+});
+
+</script>
+{{-- <script>
+    $(document).ready(function() {
         $('#general-group-ledger-table').DataTable({
             processing: true,
             serverSide: true,
@@ -143,7 +188,7 @@
                         return '<a href="' + url + '" style="color: #337ab7;">' + data + '</a>';
                     }
                 },
-                { data: 'parent', name: 'parent' },
+                // { data: 'parent', name: 'parent' },
                 { data: 'parent', name: 'opening_balance' },
                 { data: 'parent', name: 'debit' },
                 { data: 'parent', name: 'credit' },
@@ -153,7 +198,7 @@
     });
 
 
-</script>
+</script> --}}
 
 
 @endpush

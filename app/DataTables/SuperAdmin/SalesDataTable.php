@@ -36,27 +36,22 @@ class SalesDataTable extends DataTable
             ->addColumn('round_off_amount', function ($entry) {
                 return number_format($entry->round_off_amount ?? 0, 2, '.', '');
             })
-            ->addColumn('difference_amount', function ($entry) {
-                $voucherHeadsSaleReceipt = 0;
-    
-                $saleReceiptItem = TallyVoucher::where('party_ledger_name', $entry->party_ledger_name)
-                    ->where('voucher_type', 'Receipt')
-                    ->first();
-                    
-                if ($saleReceiptItem) {
-                    $voucherHeadsSaleReceipt = TallyVoucherHead::where('tally_voucher_id', $saleReceiptItem->id)
-                        ->where('entry_type', 'credit')
-                        ->sum('amount');
+            ->addColumn('pending_amount', function ($entry) {
+                $voucherHeads = TallyVoucherHead::where('tally_voucher_id', $entry->id)->get();
+                $debitAmount = 0;
+                $creditAmount = 0;
+            
+                foreach ($voucherHeads as $head) {
+                    if ($head->entry_type === 'debit') {
+                        $debitAmount += $head->amount;
+                    } elseif ($head->entry_type === 'credit') {
+                        $creditAmount += $head->amount;
+                    }
                 }
-    
-                $debit = $entry->entry_type === 'debit' ? number_format(abs($entry->amount), 2, '.', '') : 0;
-    
-                $igstAmount = $entry->igst_amount ?? 0;
-                $roundOffAmount = $entry->round_off_amount ?? 0;
-    
-                $difference = (($debit - $voucherHeadsSaleReceipt) - ($igstAmount + $roundOffAmount));
-                return number_format($difference, 2, '.', '');
-            })
+            
+                $pendingAmount = $debitAmount + $creditAmount ; // calculate the difference
+                return number_format($pendingAmount, 2, '.', '');
+            })            
             ->addColumn('party_ledger_name', function ($entry) {
                 return '<a href="' . route('sales.items', ['SaleItem' => $entry->id]) . '">' . $entry->party_ledger_name . '</a>';
             })
@@ -204,7 +199,7 @@ class SalesDataTable extends DataTable
             Column::make('voucher_date')->title(__('Invoice Date')),
             Column::make('voucher_number')->title(__('Invoice Number')),
             Column::make('debit')->title(__('Invoice Amount')),
-            Column::make('difference_amount')->title(__('Pending Amount')),
+            Column::make('pending_amount')->title(__('Pending Amount')),
             Column::make('due_date')->title(__('Due Date')),
             Column::make('overdue_day')->title(__('Overdue By Days'))->addClass('text-center text-danger'),
             Column::make('gst_in')->title(__('GSTIN')),
