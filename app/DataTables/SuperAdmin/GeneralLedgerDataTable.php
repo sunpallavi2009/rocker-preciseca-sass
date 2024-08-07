@@ -12,7 +12,14 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 
 class GeneralLedgerDataTable extends DataTable
-{
+{  
+    private $normalizedNames = [
+        'Direct Expenses, Expenses (Direct)' => 'Direct Expenses',
+        'Direct Incomes, Income (Direct)' => 'Direct Incomes',
+        'Indirect Expenses, Expenses (Indirect)' => 'Indirect Expenses',
+        'Indirect Incomes, Income (Indirect)' => 'Indirect Incomes',
+    ];
+
     public function dataTable($query)
     {
         return datatables()
@@ -38,133 +45,185 @@ class GeneralLedgerDataTable extends DataTable
                 }
                 return $data->account_type;
             })
+            
             ->editColumn('ledger_count', function ($data) {
-                $groupCount = TallyGroup::where('parent', $data->name)->count();
+                $name = $data->name;
+                $normalizedNames = $this->normalizedNames;
+                
+                if (isset($normalizedNames[$name])) {
+                    $name = $normalizedNames[$name];
+                }
+                // Log::info('normalizedNames:', ['normalizedNames' => $normalizedNames]);
+                $groupCount = TallyGroup::where('parent', $name)->count();
                 if ($groupCount == 0) {
-                    return Tallyledger::where('parent', $data->name)->count();
+                    return Tallyledger::where('parent', $name)->count();
                 }
                 return $groupCount;
             })
-            // ->editColumn('total_debit', function ($data) {
-            //     $totalDebit = Tallyledger::where('parent', $data->name)
-            //         ->leftJoin('tally_voucher_heads', 'tally_ledgers.guid', '=', 'tally_voucher_heads.ledger_guid')
-            //         ->where('tally_voucher_heads.entry_type', 'debit')
-            //         ->sum('tally_voucher_heads.amount');
-            //     Log::info('totalDebit:', ['totalDebit' => $totalDebit]);
-            //     return $totalDebit;
-            // })
-            // ->editColumn('total_credit', function ($data) {
-            //     $totalCredit = Tallyledger::where('parent', $data->name)
-            //         ->leftJoin('tally_voucher_heads', 'tally_ledgers.guid', '=', 'tally_voucher_heads.ledger_guid')
-            //         ->where('tally_voucher_heads.entry_type', 'credit')
-            //         ->sum('tally_voucher_heads.amount');
-                  
 
-            //     // Log::info('totalCredit:', ['totalCredit' => $totalCredit]);
-            //     return $totalCredit;
-            // })
-            
-            // ->editColumn('total_credit', function ($data) {
-            //     // Check if there are any TallyGroup records with parent matching $data->name
-            //     $groupCount = TallyGroup::where('parent', $data->name)->count();
-            
-            //     // Log group count for debugging
-            //     Log::info('groupCount:', ['groupCount' => $groupCount]);
-            
-            //     if ($groupCount == 0) {
-            //         // If no TallyGroup records are found, use Tallyledger records
-            //         // Fetch ledger IDs from Tallyledger
-            //         $ledgerIds = Tallyledger::where('parent', $data->name)->pluck('guid');
-                    
-            //         // Log ledger IDs
-            //         Log::info('ledgerIds:', ['ledgerIds' => $ledgerIds->toArray()]);
-                
-            //         if ($ledgerIds->isEmpty()) {
-            //             Log::info('No ledgers found for parent:', ['parentName' => $data->name]);
-            //             return 0;
-            //         }
-            
-            //         // Sum credits from TallyVoucherHead based on Tallyledger IDs
-            //         $totalCredit = TallyVoucherHead::whereIn('ledger_guid', $ledgerIds)
-            //             ->where('entry_type', 'credit')
-            //             ->sum('amount');
-                    
-            //         // Log total credit
-            //         Log::info('totalCredit from Tallyledger:', ['totalCredit' => $totalCredit]);
-                    
-            //         return $totalCredit;
-            //     } else {
-            //         // If TallyGroup records are found, use TallyGroup count
-            //         Log::info('Using TallyGroup count:', ['totalCredit' => $groupCount]);
-            //         return $groupCount;
-            //     }
-            // })
 
             ->editColumn('total_credit', function ($data) {
-                // Fetch ledger IDs from TallyGroup where 'parent' matches $data->name
-                $groupLedgerIdsQuery = TallyGroup::where('parent', $data->name);
+                $name = $data->name;
+
+                foreach ($this->normalizedNames as $pattern => $normalized) {
+                    if (strpos($name, $pattern) !== false) {
+                        $name = $normalized;
+                        break;
+                    }
+                }
                 
-                // Execute the query to get a collection
-                $groupLedgerIds = $groupLedgerIdsQuery->pluck('guid');
-                
-                Log::info('Fetched Group Ledger IDs:', ['groupLedgerIds' => $groupLedgerIds->toArray()]);
-                
+                $groupLedgerIdsQuery = TallyGroup::where('parent', $name);
+                $groupLedgerIds = $groupLedgerIdsQuery->pluck('name');
+            
                 if ($groupLedgerIds->isNotEmpty()) {
-                    // Fetch ledger IDs from Tallyledger where 'guid' matches the ones from TallyGroup
-                    $ledgerIds = Tallyledger::whereIn('guid', $groupLedgerIds)
+                    $ledgerIds = Tallyledger::whereIn('parent', $groupLedgerIds)
                         ->pluck('guid');
-                    
-                    Log::info('Fetched Ledger IDs from Tallyledger (filtered by group IDs):', ['ledgerIds' => $ledgerIds->toArray()]);
                 } else {
-                    // If no group ledger IDs found, use Tallyledger directly
-                    $ledgerIds = Tallyledger::where('parent', $data->name)->pluck('guid');
-                    
-                    Log::info('Fetched Ledger IDs from Tallyledger (directly):', ['ledgerIds' => $ledgerIds->toArray()]);
+                    $ledgerIds = Tallyledger::where('parent', $name)->pluck('guid');
                 }
-                
-                // Combine all ledger IDs
-                $allLedgerIds = $ledgerIds->unique(); // Ensure unique IDs
-                
-                Log::info('Combined Ledger IDs:', ['allLedgerIds' => $allLedgerIds->toArray()]);
-                
-                // If no ledger IDs are found, return 0
+            
+                $allLedgerIds = $ledgerIds->unique();
+            
                 if ($allLedgerIds->isEmpty()) {
-                    return 0;
+                    return '-';  
                 }
-                
-                // Sum credits from TallyVoucherHead based on the combined ledger IDs
+            
                 $totalCredit = TallyVoucherHead::whereIn('ledger_guid', $allLedgerIds)
                     ->where('entry_type', 'credit')
                     ->sum('amount');
+            
+                if ($totalCredit == 0) {
+                    return '-';  
+                }
+            
+                return number_format($totalCredit, 2);
+            })
+
+            ->editColumn('total_debit', function ($data) {
+                $name = $data->name;
                 
-                Log::info('Total Credit Calculation:', [
-                    'ledger_guids' => $allLedgerIds->toArray(),
-                    'totalCredit' => $totalCredit
-                ]);
+                foreach ($this->normalizedNames as $pattern => $normalized) {
+                    if (strpos($name, $pattern) !== false) {
+                        $name = $normalized;
+                        break;
+                    }
+                }
                 
-                return $totalCredit;
+                $groupLedgerIdsQuery = TallyGroup::where('parent', $name);
+                $groupLedgerIds = $groupLedgerIdsQuery->pluck('name');
+                
+                if ($groupLedgerIds->isNotEmpty()) {
+                    $ledgerIds = Tallyledger::whereIn('parent', $groupLedgerIds)
+                        ->pluck('guid');
+                } else {
+                    $ledgerIds = Tallyledger::where('parent', $name)->pluck('guid');
+                }
+                
+                $allLedgerIds = $ledgerIds->unique();
+                
+                if ($allLedgerIds->isEmpty()) {
+                    return '-';  // Return empty string instead of '-'
+                }
+                
+                $totalDebit = TallyVoucherHead::whereIn('ledger_guid', $allLedgerIds)
+                    ->where('entry_type', 'debit')
+                    ->sum('amount');
+                
+                if ($totalDebit == 0) {
+                    return '-';  // Return empty string instead of '-'
+                }
+                
+                return number_format(abs($totalDebit), 2);  // Remove negative sign using abs()
             })
             
+            ->editColumn('opening_balance', function ($data) {
+                $name = $data->name;
+                
+                foreach ($this->normalizedNames as $pattern => $normalized) {
+                    if (strpos($name, $pattern) !== false) {
+                        $name = $normalized;
+                        break;
+                    }
+                }
+                
+                $groupLedgerIdsQuery = TallyGroup::where('parent', $name);
+                $groupLedgerIds = $groupLedgerIdsQuery->pluck('name');
+                
+                if ($groupLedgerIds->isNotEmpty()) {
+                    $ledgerIds = Tallyledger::whereIn('parent', $groupLedgerIds)
+                        ->pluck('guid');
+                } else {
+                    $ledgerIds = Tallyledger::where('parent', $name)->pluck('guid');
+                }
+                
+                $allLedgerIds = $ledgerIds->unique();
+                
+                if ($allLedgerIds->isEmpty()) {
+                    return '-';  // Return empty string instead of '-'
+                }
+                
+                $openingBalance = TallyVoucherHead::whereIn('ledger_guid', $allLedgerIds)
+                    ->where('entry_type', 'opening')
+                    ->sum('amount');
+                
+                if ($openingBalance == 0) {
+                    return '-';  // Return empty string instead of '-'
+                }
+                
+                return number_format(abs($openingBalance), 2);  // Remove negative sign using abs()
+            })
             
-            
-            
-            
-            
-            
-            // ->editColumn('closing_balance', function ($data) {
-            //     $openingBalance = Tallyledger::where('parent', $data->name)->sum('opening_balance');
-            //     $totalDebit = Tallyledger::where('parent', $data->name)
-            //         ->leftJoin('tally_voucher_heads', 'tally_ledgers.guid', '=', 'tally_voucher_heads.ledger_guid')
-            //         ->where('tally_voucher_heads.entry_type', 'debit')
-            //         ->sum('tally_voucher_heads.amount');
-            //     $totalCredit = Tallyledger::where('parent', $data->name)
-            //         ->leftJoin('tally_voucher_heads', 'tally_ledgers.guid', '=', 'tally_voucher_heads.ledger_guid')
-            //         ->where('tally_voucher_heads.entry_type', 'credit')
-            //         ->sum('tally_voucher_heads.amount');
-            //     $closingBalance = $openingBalance + $totalDebit - $totalCredit;
-            //     Log::info('closingBalance:', ['closingBalance' => $closingBalance]);
-            //     return $closingBalance;
-            // })
+            ->editColumn('closing_balance', function ($data) {
+                $name = $data->name;
+                
+                foreach ($this->normalizedNames as $pattern => $normalized) {
+                    if (strpos($name, $pattern) !== false) {
+                        $name = $normalized;
+                        break;
+                    }
+                }
+                
+                $groupLedgerIdsQuery = TallyGroup::where('parent', $name);
+                $groupLedgerIds = $groupLedgerIdsQuery->pluck('name');
+                
+                if ($groupLedgerIds->isNotEmpty()) {
+                    $ledgerIds = Tallyledger::whereIn('parent', $groupLedgerIds)
+                        ->pluck('guid');
+                } else {
+                    $ledgerIds = Tallyledger::where('parent', $name)->pluck('guid');
+                }
+                
+                $allLedgerIds = $ledgerIds->unique();
+                
+                if ($allLedgerIds->isEmpty()) {
+                    return '-';  
+                }
+                
+                $totalDebit = TallyVoucherHead::whereIn('ledger_guid', $allLedgerIds)
+                    ->where('entry_type', 'debit')
+                    ->sum('amount');
+                
+                $totalCredit = TallyVoucherHead::whereIn('ledger_guid', $allLedgerIds)
+                    ->where('entry_type', 'credit')
+                    ->sum('amount');
+
+                
+                $openingBalance = TallyVoucherHead::whereIn('ledger_guid', $allLedgerIds)
+                    ->where('entry_type', 'opening')
+                    ->sum('amount');
+
+                $total = $totalDebit + $totalCredit;
+                
+                // $closingBalance = $openingBalance + $totalDebit + $totalCredit;
+                $closingBalance = $openingBalance + $total;
+                
+                if ($closingBalance == 0) {
+                    return '-'; 
+                }
+                
+                return number_format(abs($closingBalance), 2); 
+            })
+
             ->rawColumns(['name']);
     }
 
@@ -176,7 +235,7 @@ class GeneralLedgerDataTable extends DataTable
     public function html()
     {
         return $this->builder()
-            ->setTableId('generalledger-table')
+            ->setTableId('general-ledger-table')
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->language([
@@ -239,11 +298,10 @@ class GeneralLedgerDataTable extends DataTable
         return [
             Column::make('name')->title(__('Account')),
             Column::make('account_type')->title(__('Account Type')),
-            Column::make('ledger_count')->title(__('Count')),
-            // Column::make('opening_balance')->title(__('Opening Balance')),
-            // Column::make('total_debit')->title(__('Debit')),
-            Column::make('total_credit')->title(__('Credit')),
-            // Column::make('closing_balance')->title(__('Closing Balance')),
+            Column::make('opening_balance')->title(__('Opening Balance'))->addClass('text-end'),
+            Column::make('total_debit')->title(__('Debit'))->addClass('text-end'),
+            Column::make('total_credit')->title(__('Credit'))->addClass('text-end'),
+            Column::make('closing_balance')->title(__('Closing Balance'))->addClass('text-end'),
         ];
     }
 

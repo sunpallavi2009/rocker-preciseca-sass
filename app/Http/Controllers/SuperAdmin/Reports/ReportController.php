@@ -105,11 +105,11 @@ class ReportController extends Controller
 
         
         $voucherHeads = TallyVoucherHead::where('tally_voucher_id', $voucherItemId)->get();
-        $gstVoucherHeads = $voucherHeads->filter(function ($voucherHead) use ($voucherItem) {
-            return $voucherHead->ledger_name !== $voucherItem->party_ledger_name;
-        });
 
-        // dd($voucherHeads);
+        $gstVoucherHeads = $voucherHeads->filter(function ($voucherHead) use ($voucherItem) {
+            $excludeLedgerName = 'SALES GST INTERSTATE @18%';
+            return $voucherHead->ledger_name !== $excludeLedgerName && $voucherHead->ledger_name !== $voucherItem->party_ledger_name;
+        });
        
         
         $voucherItems = TallyVoucherItem::where('tally_voucher_id', $voucherItemId)->get();
@@ -157,16 +157,17 @@ class ReportController extends Controller
         $voucherItem = TallyVoucher::findOrFail($voucherItemId);
     
         $voucherItemName = TallyVoucher::where('party_ledger_name', $voucherItem->party_ledger_name)->get();
-        $saleReceiptItem = $voucherItemName->firstWhere('voucher_type', 'Receipt');
 
-        // Check if $saleReceiptItem is not null
+        $saleReceiptItem = $voucherItemName->filter(function ($item) use ($voucherItem) {
+            return $item->voucher_type !== $voucherItem->voucher_type;
+        })->first();
+        
         if ($saleReceiptItem) {
             $voucherHeadsSaleReceipt = TallyVoucherHead::where('tally_voucher_id', $saleReceiptItem->id)
-                ->where('entry_type', 'credit')
+                ->where('ledger_name', $saleReceiptItem->party_ledger_name)
                 ->get();
         } else {
-            // Handle the case where $saleReceiptItem is null
-            $voucherHeadsSaleReceipt = collect(); // Or any default value you prefer
+            $voucherHeadsSaleReceipt = collect(); 
         }
 
         $ledgerData = TallyLedger::where('language_name', $voucherItem->party_ledger_name)->get();
@@ -218,16 +219,18 @@ class ReportController extends Controller
         $voucherItem = TallyVoucher::findOrFail($voucherItemId);
     
         $voucherItemName = TallyVoucher::where('party_ledger_name', $voucherItem->party_ledger_name)->get();
-        $saleReceiptItem = $voucherItemName->firstWhere('voucher_type', 'Receipt');
 
+        $saleReceiptItem = $voucherItemName->filter(function ($item) use ($voucherItem) {
+            return $item->voucher_type !== $voucherItem->voucher_type;
+        })->first();
+        
         // Check if $saleReceiptItem is not null
         if ($saleReceiptItem) {
             $voucherHeadsSaleReceipt = TallyVoucherHead::where('tally_voucher_id', $saleReceiptItem->id)
-                ->where('entry_type', 'credit')
+            ->where('ledger_name', $saleReceiptItem->party_ledger_name)
                 ->get();
         } else {
-            // Handle the case where $saleReceiptItem is null
-            $voucherHeadsSaleReceipt = collect(); // Or any default value you prefer
+            $voucherHeadsSaleReceipt = collect(); 
         }
 
         $ledgerData = TallyLedger::where('language_name', $voucherItem->party_ledger_name)->get();

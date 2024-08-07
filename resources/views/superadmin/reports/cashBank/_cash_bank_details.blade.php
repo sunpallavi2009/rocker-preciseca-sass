@@ -35,7 +35,7 @@
          <!--start email wrapper-->
          <div class="email-wrapper">
             <div class="email-sidebar">
-                <div class="email-sidebar-header d-grid"> <a href="javascript:;"  onclick="history.back();" class="btn btn-primary compose-mail-btn"><i class='bx bx-left-arrow-alt me-2'></i> Cash and Bank</a>
+                <div class="email-sidebar-header d-grid"> <a href="javascript:;" onclick="history.back();" class="btn btn-primary compose-mail-btn"><i class='bx bx-left-arrow-alt me-2'></i> Cash and Bank</a>
                 </div>
                 <div class="email-sidebar-content">
                     <div class="email-navigation" style="height: 530px;">
@@ -68,18 +68,25 @@
                 <div class="">
                     <div class="email-list">
                         <div class="table-responsive table-responsive-scroll  border-0">
-                            <table class="table table-striped" id="cash-bank-table">
+                            <table class="table table-striped" id="cash-bank-table" width="100%">
                                 <thead>
                                     <tr>
                                         <td>Name</td>
-                                        <td>Parent</td>
-                                        <td>Entry Type</td>
                                         <td>Opening Balance</td>
                                         <td>Debit</td>
                                         <td>Credit</td>
                                         <td>Closing Balance</td>
                                     </tr>
                                 </thead>
+                                <tfoot>
+                                    <tr>
+                                        <td>Total</td>
+                                        <td id="footer-opening-balance"></td>
+                                        <td id="footer-debit"></td>
+                                        <td id="footer-credit"></td>
+                                        <td id="footer-closing-balance"></td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
 
@@ -113,7 +120,7 @@
 
 
 @include('layouts.includes.datatable-js')
-<script>
+{{-- <script>
     $(document).ready(function() {
         $('#cash-bank-table').DataTable({
             processing: true,
@@ -141,9 +148,58 @@
     });
 
 
+</script> --}}
+
+<script>
+     $(document).ready(function() {
+    $('#cash-bank-table').DataTable({
+        processing: true,
+        serverSide: true,
+        paging: false,
+        ajax: '{{ route('reports.CashBank.data', $cashBankId) }}',
+        columns: [
+            {
+                data: 'language_name',
+                name: 'language_name',
+                render: function(data, type, row) {
+                    var url = '{{ route("reports.VoucherHead", ":guid") }}';
+                    url = url.replace(':guid', row.guid);
+                    return '<a href="' + url + '" style="color: #337ab7;">' + data + '</a>';
+                }
+            },
+            { data: 'opening_balance', name: 'opening_balance', className: 'text-end' },
+            { data: 'debit', name: 'debit', className: 'text-end' },
+            { data: 'credit', name: 'credit', className: 'text-end' },
+            { data: 'closing_balance', name: 'closing_balance', className: 'text-end' }
+        ],
+        footerCallback: function(row, data, start, end, display) {
+            var api = this.api();
+
+            // Calculate totals
+            var totalOpeningBalance = api.column(1, { page: 'current' }).data().reduce(function(a, b) {
+                return (parseFloat(a) || 0) + (parseFloat(b) || 0);
+            }, 0);
+
+            var totalDebit = api.column(2, { page: 'current' }).data().reduce(function(a, b) {
+                return (parseFloat(a) || 0) + (parseFloat(b) || 0);
+            }, 0);
+
+            var totalCredit = api.column(3, { page: 'current' }).data().reduce(function(a, b) {
+                return (parseFloat(a) || 0) + (parseFloat(b) || 0);
+            }, 0);
+
+            var totalClosingBalance = totalOpeningBalance + totalDebit - totalCredit;
+
+            // Update footer
+            $(api.column(1).footer()).html(Math.abs(totalOpeningBalance).toFixed(2));
+            $(api.column(2).footer()).html(Math.abs(totalDebit).toFixed(2));
+            $(api.column(3).footer()).html(Math.abs(totalCredit).toFixed(2));
+            $(api.column(4).footer()).html(Math.abs(totalClosingBalance).toFixed(2));
+        }
+    });
+});
+
 </script>
-
-
 @endpush
 @section("script")
 <script src="{{ url('assets/plugins/bs-stepper/js/bs-stepper.min.js') }}"></script>

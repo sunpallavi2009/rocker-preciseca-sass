@@ -26,7 +26,7 @@
                         <div class="card">
                             <div class="card-body">
                                 <div class="d-lg-flex align-items-center mb-4 gap-3">
-                                    <div class="col-lg-2">
+                                    {{-- <div class="col-lg-2">
                                         <form id="dateRangeForm">
                                             <label for="date_range" class="form-label">Date Range</label>
                                             <input type="text" id="date_range" name="date_range" class="form-control date-range" placeholder="Select Date Range">
@@ -43,14 +43,13 @@
                                                 <option value="Debit Note">DebitNote</option>
                                                 <option value="Receipt">Receipt</option>
                                                 <option value="Payment">Payment</option>
-                                                {{-- <option value="JournalVoucher">JournalVoucher</option> --}}
-                                                <!-- Add more options as needed -->
                                             </select>
                                         </form>
-                                    </div>
+                                    </div> --}}
                                 </div>
                                 <div class="table-responsive">
-                                    {{ $dataTable->table(['width' => '100%']) }}
+                                    {{-- {{ $dataTable->table(['width' => '100%']) }} --}}
+                                    {!! $dataTable->table(['width' => '100%','id' => 'general-ledger-table'], true) !!}
                                 </div>
                             </div>
                         </div>
@@ -109,5 +108,7 @@
                 voucherTypeSelect.value = voucherType;
             }
         });
+
+        
     </script>
 @endpush

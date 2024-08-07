@@ -70,10 +70,10 @@ class PaymentRegisterDataTable extends DataTable
     public function html()
     {
         return $this->builder()
-            ->setTableId('daybook-table')
+            ->setTableId('payment-register-table')
             ->columns($this->getColumns())
             ->minifiedAjax()
-            ->orderBy(3)
+            ->orderBy(0)
             ->language([
                 "paginate" => [
                     "next" => '<i class="ti ti-chevron-right"></i>next',
@@ -134,13 +134,10 @@ class PaymentRegisterDataTable extends DataTable
     protected function getColumns()
     {
         return [
-            // Column::make('No')->data('DT_RowIndex')->name('DT_RowIndex')->searchable(false)->orderable(false),
-            // Column::make('guid')->title(__('Guid')),
             Column::make('voucher_date')->title(__('Date')),
-            Column::make('party_ledger_name')->title(__('Ledger')),
-            Column::make('voucher_type')->title(__('Voucher Type')),
-            Column::make('voucher_number')->title(__('Voucher Number')),
-            // Column::make('entry_type')->title(__('entry type')),
+            Column::make('party_ledger_name')->title(__('name')),
+            Column::make('voucher_number')->title(__('Transaction')),
+            Column::make('voucher_type')->title(__('Transaction Type')),
             Column::make('debit')->title(__('Debit')),
             Column::make('credit')->title(__('Credit')),
         ];

@@ -175,19 +175,14 @@ class CustomerDataTable extends DataTable
             Column::make('language_name')->title(__('Name')),
             Column::make('parent')->title(__('Group')),
             Column::make('parent')->title(__('Sales (Last 30 days)'))->addClass('text-end'),
-            Column::make('parent')->title(__('Sales (Last 30 days)'))->addClass('text-end'),
-            Column::make('parent')->title(__('% Change (Last 30 days)'))->addClass('text-end'),
             Column::make('opening_balance')->title(__('&#8377 Net Outstanding (As of Today)'))->addClass('text-end'),
             Column::make('parent')->title(__('&#8377 Overdue (Total)'))->addClass('text-end'),
-            Column::make('parent')->title(__('&#8377 Upcoming (Total)'))->addClass('text-end'),
-            Column::make('parent')->title(__('&#8377 Upcoming (Due in 7 days)'))->addClass('text-end'),
-            Column::make('opening_balance')->title(__('&#8377 On Account (As of Today)'))->addClass('text-end'),
-            Column::make('parent')->title(__('&#8377 PDC (Total)'))->addClass('text-end'),
             Column::make('parent')->title(__('&#8377 Payment Collection (Current FY)'))->addClass('text-end'),
             Column::make('parent')->title(__('&#8377 Last Payment (Date)')),
-            Column::make('parent')->title(__('Avg Pay day'))->addClass('text-end'),
-            Column::make('parent')->title(__('&#8377 Credit Limit'))->addClass('text-end'),
-            Column::make('bill_credit_period')->title(__('&#8377 Credit Period (Days)'))->addClass('text-end'),
+            Column::make('phone_no')->title(__('Phone. No.')),
+            Column::make('email')->title(__('Email')),
+            // Column::make('parent')->title(__('&#8377 Credit Limit'))->addClass('text-end'),
+            // Column::make('bill_credit_period')->title(__('&#8377 Credit Period (Days)'))->addClass('text-end'),
         ];
     }
 

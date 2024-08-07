@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('ledger_guid')->nullable();
             $table->string('amount')->nullable();
             $table->string('entry_type')->nullable();
+            $table->string('isdeemedpositive')->nullable();
             $table->timestamps();
         });
     }

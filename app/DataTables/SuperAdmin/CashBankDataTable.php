@@ -4,11 +4,21 @@ namespace App\DataTables\SuperAdmin;
 
 use Carbon\Carbon;
 use App\Models\TallyGroup;
+use App\Models\Tallyledger;
+use App\Models\TallyVoucherHead;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Services\DataTable;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class CashBankDataTable extends DataTable
-{
+{  
+    private $normalizedNames = [
+        'Direct Expenses, Expenses (Direct)' => 'Direct Expenses',
+        'Direct Incomes, Income (Direct)' => 'Direct Incomes',
+        'Indirect Expenses, Expenses (Indirect)' => 'Indirect Expenses',
+        'Indirect Incomes, Income (Indirect)' => 'Indirect Incomes',
+    ];
 
     public function dataTable($query)
     {
@@ -18,22 +28,209 @@ class CashBankDataTable extends DataTable
             ->editColumn('created_at', function ($request) {
                 return Carbon::parse($request->created_at)->format('Y-m-d H:i:s');
             })
-            // ->editColumn('name', function ($model) {
-            //     // Create a link to the detailed page for this account
-            //     return '<a href="' . route('reports.GeneralLedger.details', ['id' => $model->id]) . '">' . $model->name . '</a>';
-            // })
             ->editColumn('name', function ($data) {
                 $url = route('reports.CashBank.details', ['CashBank' => $data->id]); // Ensure 'customer' matches the route parameter name
                 return '<a href="' . $url . '" style="color: #337ab7;">' . $data->name . '</a>';
             })
-            ->rawColumns(['name']); 
+            ->editColumn('account_type', function ($data) {
+                $name = strtolower($data->name);
+                if (strpos($name, 'assets') !== false || strpos($name, 'asset') !== false || strpos($name, 'investments') !== false) {
+                    return 'Asset';
+                } elseif (strpos($name, 'income') !== false || strpos($name, 'revenue') !== false || strpos($name, 'sales accounts') !== false) {
+                    return 'Revenue';
+                } elseif (strpos($name, 'liabilities') !== false || strpos($name, 'liability') !== false || strpos($name, 'branch / divisions') !== false || strpos($name, 'suspense a/c') !== false || strpos($name, 'capital account') !== false) {
+                    return 'Liability';
+                } elseif (strpos($name, 'expense') !== false || strpos($name, 'purchase') !== false) {
+                    return 'Expense';
+                }
+                return $data->account_type;
+            })
+            
+            ->editColumn('ledger_count', function ($data) {
+                $name = $data->name;
+                $normalizedNames = $this->normalizedNames;
+                
+                if (isset($normalizedNames[$name])) {
+                    $name = $normalizedNames[$name];
+                }
+                // Log::info('normalizedNames:', ['normalizedNames' => $normalizedNames]);
+                $groupCount = TallyGroup::where('parent', $name)->count();
+                if ($groupCount == 0) {
+                    return Tallyledger::where('parent', $name)->count();
+                }
+                return $groupCount;
+            })
+
+
+            ->editColumn('total_credit', function ($data) {
+                $name = $data->name;
+
+                foreach ($this->normalizedNames as $pattern => $normalized) {
+                    if (strpos($name, $pattern) !== false) {
+                        $name = $normalized;
+                        break;
+                    }
+                }
+                
+                $groupLedgerIdsQuery = TallyGroup::where('parent', $name);
+                $groupLedgerIds = $groupLedgerIdsQuery->pluck('name');
+            
+                if ($groupLedgerIds->isNotEmpty()) {
+                    $ledgerIds = Tallyledger::whereIn('parent', $groupLedgerIds)
+                        ->pluck('guid');
+                } else {
+                    $ledgerIds = Tallyledger::where('parent', $name)->pluck('guid');
+                }
+            
+                $allLedgerIds = $ledgerIds->unique();
+            
+                if ($allLedgerIds->isEmpty()) {
+                    return '-';  
+                }
+            
+                $totalCredit = TallyVoucherHead::whereIn('ledger_guid', $allLedgerIds)
+                    ->where('entry_type', 'credit')
+                    ->sum('amount');
+            
+                if ($totalCredit == 0) {
+                    return '-';  
+                }
+            
+                return number_format($totalCredit, 2);
+            })
+
+            ->editColumn('total_debit', function ($data) {
+                $name = $data->name;
+                
+                foreach ($this->normalizedNames as $pattern => $normalized) {
+                    if (strpos($name, $pattern) !== false) {
+                        $name = $normalized;
+                        break;
+                    }
+                }
+                
+                $groupLedgerIdsQuery = TallyGroup::where('parent', $name);
+                $groupLedgerIds = $groupLedgerIdsQuery->pluck('name');
+                
+                if ($groupLedgerIds->isNotEmpty()) {
+                    $ledgerIds = Tallyledger::whereIn('parent', $groupLedgerIds)
+                        ->pluck('guid');
+                } else {
+                    $ledgerIds = Tallyledger::where('parent', $name)->pluck('guid');
+                }
+                
+                $allLedgerIds = $ledgerIds->unique();
+                
+                if ($allLedgerIds->isEmpty()) {
+                    return '-';  // Return empty string instead of '-'
+                }
+                
+                $totalDebit = TallyVoucherHead::whereIn('ledger_guid', $allLedgerIds)
+                    ->where('entry_type', 'debit')
+                    ->sum('amount');
+                
+                if ($totalDebit == 0) {
+                    return '-';  // Return empty string instead of '-'
+                }
+                
+                return number_format(abs($totalDebit), 2);  // Remove negative sign using abs()
+            })
+            
+            ->editColumn('opening_balance', function ($data) {
+                $name = $data->name;
+                
+                foreach ($this->normalizedNames as $pattern => $normalized) {
+                    if (strpos($name, $pattern) !== false) {
+                        $name = $normalized;
+                        break;
+                    }
+                }
+                
+                $groupLedgerIdsQuery = TallyGroup::where('parent', $name);
+                $groupLedgerIds = $groupLedgerIdsQuery->pluck('name');
+                
+                if ($groupLedgerIds->isNotEmpty()) {
+                    $ledgerIds = Tallyledger::whereIn('parent', $groupLedgerIds)
+                        ->pluck('guid');
+                } else {
+                    $ledgerIds = Tallyledger::where('parent', $name)->pluck('guid');
+                }
+                
+                $allLedgerIds = $ledgerIds->unique();
+                
+                if ($allLedgerIds->isEmpty()) {
+                    return '-';  // Return empty string instead of '-'
+                }
+                
+                $openingBalance = TallyVoucherHead::whereIn('ledger_guid', $allLedgerIds)
+                    ->where('entry_type', 'opening')
+                    ->sum('amount');
+                
+                if ($openingBalance == 0) {
+                    return '-';  // Return empty string instead of '-'
+                }
+                
+                return number_format(abs($openingBalance), 2);  // Remove negative sign using abs()
+            })
+            
+            ->editColumn('closing_balance', function ($data) {
+                $name = $data->name;
+                
+                foreach ($this->normalizedNames as $pattern => $normalized) {
+                    if (strpos($name, $pattern) !== false) {
+                        $name = $normalized;
+                        break;
+                    }
+                }
+                
+                $groupLedgerIdsQuery = TallyGroup::where('parent', $name);
+                $groupLedgerIds = $groupLedgerIdsQuery->pluck('name');
+                
+                if ($groupLedgerIds->isNotEmpty()) {
+                    $ledgerIds = Tallyledger::whereIn('parent', $groupLedgerIds)
+                        ->pluck('guid');
+                } else {
+                    $ledgerIds = Tallyledger::where('parent', $name)->pluck('guid');
+                }
+                
+                $allLedgerIds = $ledgerIds->unique();
+                
+                if ($allLedgerIds->isEmpty()) {
+                    return '-';  
+                }
+                
+                $totalDebit = TallyVoucherHead::whereIn('ledger_guid', $allLedgerIds)
+                    ->where('entry_type', 'debit')
+                    ->sum('amount');
+                
+                $totalCredit = TallyVoucherHead::whereIn('ledger_guid', $allLedgerIds)
+                    ->where('entry_type', 'credit')
+                    ->sum('amount');
+
+                
+                $openingBalance = TallyVoucherHead::whereIn('ledger_guid', $allLedgerIds)
+                    ->where('entry_type', 'opening')
+                    ->sum('amount');
+
+                $total = $totalDebit + $totalCredit;
+                
+                // $closingBalance = $openingBalance + $totalDebit + $totalCredit;
+                $closingBalance = $openingBalance + $total;
+                
+                if ($closingBalance == 0) {
+                    return '-'; 
+                }
+                
+                return number_format(abs($closingBalance), 2); 
+            })
+
+            ->rawColumns(['name']);
     }
 
     public function query(TallyGroup $model)
     {
         $names = ['Bank Accounts', 'Bank OD A/c, Bank OCC A/c', 'Cash-in-Hand'];
         return $model->newQuery()->whereIn('name', $names);
-        // return $model->newQuery();
     }
 
     public function html()
@@ -102,15 +299,15 @@ class CashBankDataTable extends DataTable
         return [
             Column::make('name')->title(__('Account')),
             Column::make('parent')->title(__('Account Type')),
-            Column::make('parent')->title(__('Opening Balance')), // Adjust as needed
-            Column::make('parent')->title(__('Debit')), // Adjust as needed
-            Column::make('parent')->title(__('Credit')), // Adjust as needed
-            Column::make('parent')->title(__('Closing Balance')), // Adjust as needed
+            Column::make('opening_balance')->title(__('Opening Balance'))->addClass('text-end'),
+            Column::make('total_debit')->title(__('Debit'))->addClass('text-end'),
+            Column::make('total_credit')->title(__('Credit'))->addClass('text-end'),
+            Column::make('closing_balance')->title(__('Closing Balance'))->addClass('text-end'),
         ];
     }
 
     protected function filename(): string
     {
-        return 'Faq_' . date('YmdHis');
+        return 'GeneralLedger_' . date('YmdHis');
     }
 }

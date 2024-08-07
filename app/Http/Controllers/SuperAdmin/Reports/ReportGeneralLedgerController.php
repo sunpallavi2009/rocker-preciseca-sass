@@ -38,19 +38,44 @@ class ReportGeneralLedgerController extends Controller
         ]);
     }
 
+    private $normalizedNames = [
+        'Direct Expenses, Expenses (Direct)' => 'Direct Expenses',
+        'Direct Incomes, Income (Direct)' => 'Direct Incomes',
+        'Indirect Expenses, Expenses (Indirect)' => 'Indirect Expenses',
+        'Indirect Incomes, Income (Indirect)' => 'Indirect Incomes',
+    ];
+
     public function getGeneralLedgerData($generalLedgerId)
     {
-        $generalLedger = TallyGroup::findOrFail($generalLedgerId);
+        $generalLedger = TallyGroup::find($generalLedgerId);
+    
+        if (!$generalLedger) {
+            // Return a default data structure if not found
+            $defaultData = [
+                [
+                    'id' => $generalLedgerId, // Ensure id is present
+                    'name' => 'Default Name',
+                    'opening_balance' => 0,
+                    'total_debit' => 0,
+                    'total_credit' => 0,
+                    'closing_balance' => 0,
+                    'created_at' => now(),
+                ]
+            ];
+            return DataTables::of($defaultData)->make(true);
+        }
+    
         $generalLedgerName = $generalLedger->name;
     
         $query = TallyGroup::select(
-                'tally_groups.*', 
+                'tally_groups.id', // Ensure id is selected
+                'tally_groups.name',
                 \DB::raw('COUNT(tally_ledgers.id) as ledgers_count'),
                 \DB::raw('SUM(CASE WHEN tally_voucher_heads.entry_type = "debit" THEN tally_voucher_heads.amount ELSE 0 END) as total_debit'),
                 \DB::raw('SUM(CASE WHEN tally_voucher_heads.entry_type = "credit" THEN tally_voucher_heads.amount ELSE 0 END) as total_credit'),
                 \DB::raw('tally_ledgers.opening_balance'),
                 \DB::raw('(tally_ledgers.opening_balance + 
-                           SUM(CASE WHEN tally_voucher_heads.entry_type = "debit" THEN tally_voucher_heads.amount ELSE 0 END) + 
+                           SUM(CASE WHEN tally_voucher_heads.entry_type = "debit" THEN tally_voucher_heads.amount ELSE 0 END) - 
                            SUM(CASE WHEN tally_voucher_heads.entry_type = "credit" THEN tally_voucher_heads.amount ELSE 0 END)) as closing_balance')
             )
             ->leftJoin('tally_ledgers', 'tally_groups.name', '=', 'tally_ledgers.parent')
@@ -58,61 +83,87 @@ class ReportGeneralLedgerController extends Controller
             ->where('tally_groups.parent', $generalLedgerName)
             ->groupBy('tally_groups.id', 'tally_groups.name', 'tally_groups.parent', 'tally_groups.created_at', 'tally_groups.updated_at', 'tally_ledgers.opening_balance');
     
-        return DataTables::of($query)
+        $data = $query->get();
+    
+        // Check if data is empty and return default data if so
+        if ($data->isEmpty()) {
+            $data = collect([
+                [
+                    'id' => $generalLedgerId, // Ensure id is present
+                    'name' => $generalLedgerName,
+                    'opening_balance' => 0,
+                    'total_debit' => 0,
+                    'total_credit' => 0,
+                    'closing_balance' => 0,
+                    'created_at' => now(),
+                ]
+            ]);
+        }
+    
+        return DataTables::of($data)
             ->addIndexColumn()
             ->editColumn('total_debit', function ($row) {
-                return $this->formatNumber($row->total_debit);
+                return $this->formatNumber($row['total_debit']);
             })
             ->editColumn('total_credit', function ($row) {
-                return $this->formatNumber($row->total_credit);
+                return $this->formatNumber($row['total_credit']);
             })
             ->editColumn('opening_balance', function ($row) {
-                return $this->formatNumber($row->opening_balance);
+                return $this->formatNumber($row['opening_balance']);
             })
             ->editColumn('closing_balance', function ($row) {
-                return $this->formatNumber($row->closing_balance);
+                return $this->formatNumber($row['closing_balance']);
             })
-            ->editColumn('created_at', function ($request) {
-                return Carbon::parse($request->created_at)->format('Y-m-d H:i:s');
+            ->editColumn('created_at', function ($row) {
+                return Carbon::parse($row['created_at'])->format('Y-m-d H:i:s');
             })
             ->make(true);
     }
     
+    
 
-
+    
     // public function getGeneralLedgerData($generalLedgerId)
     // {
     //     $generalLedger = TallyGroup::findOrFail($generalLedgerId);
     //     $generalLedgerName = $generalLedger->name;
+    //     // dd($generalLedgerName);
     
-    //     $query = TallyGroup::select('tally_groups.*', \DB::raw('COUNT(tally_ledgers.id) as ledgers_count'))
+    //     $query = TallyGroup::select(
+    //             'tally_groups.*', 
+    //             \DB::raw('COUNT(tally_ledgers.id) as ledgers_count'),
+    //             \DB::raw('SUM(CASE WHEN tally_voucher_heads.entry_type = "debit" THEN tally_voucher_heads.amount ELSE 0 END) as total_debit'),
+    //             \DB::raw('SUM(CASE WHEN tally_voucher_heads.entry_type = "credit" THEN tally_voucher_heads.amount ELSE 0 END) as total_credit'),
+    //             \DB::raw('tally_ledgers.opening_balance'),
+    //             \DB::raw('(tally_ledgers.opening_balance + 
+    //                        SUM(CASE WHEN tally_voucher_heads.entry_type = "debit" THEN tally_voucher_heads.amount ELSE 0 END) + 
+    //                        SUM(CASE WHEN tally_voucher_heads.entry_type = "credit" THEN tally_voucher_heads.amount ELSE 0 END)) as closing_balance')
+    //         )
     //         ->leftJoin('tally_ledgers', 'tally_groups.name', '=', 'tally_ledgers.parent')
+    //         ->leftJoin('tally_voucher_heads', 'tally_ledgers.guid', '=', 'tally_voucher_heads.ledger_guid')
     //         ->where('tally_groups.parent', $generalLedgerName)
-    //         ->groupBy('tally_groups.id', 'tally_groups.name', 'tally_groups.parent', 'tally_groups.created_at', 'tally_groups.updated_at');
+    //         ->groupBy('tally_groups.id', 'tally_groups.name', 'tally_groups.parent', 'tally_groups.created_at', 'tally_groups.updated_at', 'tally_ledgers.opening_balance');
     
     //     return DataTables::of($query)
     //         ->addIndexColumn()
+    //         ->editColumn('total_debit', function ($row) {
+    //             return $this->formatNumber($row->total_debit);
+    //         })
+    //         ->editColumn('total_credit', function ($row) {
+    //             return $this->formatNumber($row->total_credit);
+    //         })
+    //         ->editColumn('opening_balance', function ($row) {
+    //             return $this->formatNumber($row->opening_balance);
+    //         })
+    //         ->editColumn('closing_balance', function ($row) {
+    //             return $this->formatNumber($row->closing_balance);
+    //         })
     //         ->editColumn('created_at', function ($request) {
     //             return Carbon::parse($request->created_at)->format('Y-m-d H:i:s');
     //         })
     //         ->make(true);
     // }
     
-
-    // public function getGeneralLedgerData($generalLedgerId)
-    // {
-    //     $generalLedger = TallyGroup::findOrFail($generalLedgerId);
-    //     $generalLedgerName = $generalLedger->name;
-
-    //     $query = TallyGroup::where('parent', $generalLedgerName);
-
-    //     return DataTables::of($query)
-    //         ->addIndexColumn()
-    //         ->editColumn('created_at', function ($request) {
-    //             return Carbon::parse($request->created_at)->format('Y-m-d H:i:s');
-    //         })
-    //         ->make(true);
-    // }
 
     public function AllGeneralGroupLedgerReports($generalLedgerId)
     {
@@ -131,7 +182,21 @@ class ReportGeneralLedgerController extends Controller
     {
         $generalLedger = TallyGroup::findOrFail($generalLedgerId);
         $generalLedgerName = $generalLedger->name;
-    
+
+        // Define your normalized names array
+        $normalizedNames = [
+            'Direct Expenses, Expenses (Direct)' => 'Direct Expenses',
+            'Direct Incomes, Income (Direct)' => 'Direct Incomes',
+            'Indirect Expenses, Expenses (Indirect)' => 'Indirect Expenses',
+            'Indirect Incomes, Income (Indirect)' => 'Indirect Incomes',
+        ];
+
+        // Check if the generalLedgerName is in the normalized names array
+        if (array_key_exists($generalLedgerName, $normalizedNames)) {
+            $generalLedgerName = $normalizedNames[$generalLedgerName];
+        }
+
+        // dd()
         $query = TallyLedger::where('parent', $generalLedgerName)
             ->leftJoin('tally_voucher_heads', 'tally_ledgers.guid', '=', 'tally_voucher_heads.ledger_guid')
             ->select(
@@ -141,11 +206,11 @@ class ReportGeneralLedgerController extends Controller
                 DB::raw('SUM(CASE WHEN tally_voucher_heads.entry_type = "debit" THEN tally_voucher_heads.amount ELSE 0 END) as debit'),
                 DB::raw('SUM(CASE WHEN tally_voucher_heads.entry_type = "credit" THEN tally_voucher_heads.amount ELSE 0 END) as credit'),
                 DB::raw('(tally_ledgers.opening_balance + 
-                          SUM(CASE WHEN tally_voucher_heads.entry_type = "debit" THEN tally_voucher_heads.amount ELSE 0 END) + 
-                          SUM(CASE WHEN tally_voucher_heads.entry_type = "credit" THEN tally_voucher_heads.amount ELSE 0 END)) as closing_balance')
+                        SUM(CASE WHEN tally_voucher_heads.entry_type = "debit" THEN tally_voucher_heads.amount ELSE 0 END) + 
+                        SUM(CASE WHEN tally_voucher_heads.entry_type = "credit" THEN tally_voucher_heads.amount ELSE 0 END)) as closing_balance')
             )
             ->groupBy('tally_ledgers.language_name', 'tally_ledgers.guid', 'tally_ledgers.opening_balance');
-    
+
         return DataTables::of($query)
             ->addIndexColumn()
             ->editColumn('opening_balance', function ($row) {
@@ -162,6 +227,44 @@ class ReportGeneralLedgerController extends Controller
             })
             ->make(true);
     }
+
+
+    // public function getGeneralGroupLedgerData($generalLedgerId)
+    // {
+    //     $generalLedger = TallyGroup::findOrFail($generalLedgerId);
+    //     $generalLedgerName = $generalLedger->name;
+    //     dd($generalLedgerName);
+    //     $query = TallyLedger::where('parent', $generalLedgerName)
+    //         ->leftJoin('tally_voucher_heads', 'tally_ledgers.guid', '=', 'tally_voucher_heads.ledger_guid')
+    //         ->select(
+    //             'tally_ledgers.language_name',
+    //             'tally_ledgers.guid',
+    //             'tally_ledgers.opening_balance',
+    //             DB::raw('SUM(CASE WHEN tally_voucher_heads.entry_type = "debit" THEN tally_voucher_heads.amount ELSE 0 END) as debit'),
+    //             DB::raw('SUM(CASE WHEN tally_voucher_heads.entry_type = "credit" THEN tally_voucher_heads.amount ELSE 0 END) as credit'),
+    //             DB::raw('(tally_ledgers.opening_balance + 
+    //                       SUM(CASE WHEN tally_voucher_heads.entry_type = "debit" THEN tally_voucher_heads.amount ELSE 0 END) + 
+    //                       SUM(CASE WHEN tally_voucher_heads.entry_type = "credit" THEN tally_voucher_heads.amount ELSE 0 END)) as closing_balance')
+    //         )
+    //         ->groupBy('tally_ledgers.language_name', 'tally_ledgers.guid', 'tally_ledgers.opening_balance');
+    
+    //     return DataTables::of($query)
+    //         ->addIndexColumn()
+    //         ->editColumn('opening_balance', function ($row) {
+    //             return $this->formatNumber($row->opening_balance);
+    //         })
+    //         ->editColumn('debit', function ($row) {
+    //             return $this->formatNumber($row->debit);
+    //         })
+    //         ->editColumn('credit', function ($row) {
+    //             return $this->formatNumber($row->credit);
+    //         })
+    //         ->editColumn('closing_balance', function ($row) {
+    //             return $this->formatNumber($row->closing_balance);
+    //         })
+    //         ->make(true);
+    // }
+
     protected function formatNumber($value)
     {
         // Ensure the value is numeric

@@ -120,6 +120,90 @@
 
 @include('layouts.includes.datatable-js')
 <script>
+        $(document).ready(function() {
+        $('#general-ledger-table').DataTable({
+            processing: true,
+            serverSide: true,
+            paging: false,
+            ajax: {
+                url: '{{ route('reports.GeneralLedger.data', $generalLedgerId) }}',
+                dataSrc: function (json) {
+                    console.log(json); // Debug the data structure here
+                    return json.data;
+                }
+            },
+            columns: [
+                {
+                    data: 'name',
+                    name: 'name',
+                    render: function(data, type, row) {
+                        var url = '{{ route("reports.GeneralGroupLedger.details", ":id") }}';
+                        url = url.replace(':id', row.id || '{{ $generalLedgerId }}'); // Handle missing id
+                        return '<a href="' + url + '" style="color: #337ab7;">' + data + '</a>';
+                    }
+                },
+                {
+                    data: 'opening_balance',
+                    name: 'opening_balance',
+                    render: function(data) {
+                        return data;
+                    }
+                },
+                {
+                    data: 'total_debit',
+                    name: 'total_debit',
+                    render: function(data) {
+                        return data;
+                    }
+                },
+                {
+                    data: 'total_credit',
+                    name: 'total_credit',
+                    render: function(data) {
+                        return data;
+                    }
+                },
+                {
+                    data: 'closing_balance',
+                    name: 'closing_balance',
+                    render: function(data) {
+                        return data;
+                    }
+                }
+            ],
+            footerCallback: function (row, data, start, end, display) {
+                var api = this.api();
+
+                var totalOpeningBalance = api.column(1).data().reduce(function (a, b) {
+                    var num = parseFloat(b.replace(/[^0-9.-]+/g, ""));
+                    return isNaN(num) ? a : a + num;
+                }, 0);
+                
+                var totalDebit = api.column(2).data().reduce(function (a, b) {
+                    var num = parseFloat(b.replace(/[^0-9.-]+/g, ""));
+                    return isNaN(num) ? a : a + num;
+                }, 0);
+                
+                var totalCredit = api.column(3).data().reduce(function (a, b) {
+                    var num = parseFloat(b.replace(/[^0-9.-]+/g, ""));
+                    return isNaN(num) ? a : a + num;
+                }, 0);
+                
+                var totalClosingBalance = api.column(4).data().reduce(function (a, b) {
+                    var num = parseFloat(b.replace(/[^0-9.-]+/g, ""));
+                    return isNaN(num) ? a : a + num;
+                }, 0);
+
+                // Update footer values
+                $(api.column(1).footer()).html(totalOpeningBalance.toFixed(2));
+                $(api.column(2).footer()).html(totalDebit.toFixed(2));
+                $(api.column(3).footer()).html(totalCredit.toFixed(2));
+                $(api.column(4).footer()).html(totalClosingBalance.toFixed(2));
+            }
+        });
+    });
+</script>
+{{-- <script>
     $(document).ready(function() {
     $('#general-ledger-table').DataTable({
         processing: true,
@@ -203,7 +287,7 @@
     });
 });
 
-</script>
+</script> --}}
 @endpush
 @section("script")
 <script src="{{ url('assets/plugins/bs-stepper/js/bs-stepper.min.js') }}"></script>

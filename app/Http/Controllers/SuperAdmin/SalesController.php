@@ -57,9 +57,18 @@ class SalesController extends Controller
 
         
         $voucherHeads = TallyVoucherHead::where('tally_voucher_id', $saleItemId)->get();
+        // $gstVoucherHeads = $voucherHeads->filter(function ($voucherHead) use ($saleItem) {
+        //     return $voucherHead->ledger_name !== $saleItem->party_ledger_name;
+        // });
+
         $gstVoucherHeads = $voucherHeads->filter(function ($voucherHead) use ($saleItem) {
-            return $voucherHead->ledger_name !== $saleItem->party_ledger_name;
+            // Define the ledger name to exclude
+            $excludeLedgerName = 'SALES GST INTERSTATE @18%';
+        
+            // Check if the ledger name is not the one to be excluded and does not match the party ledger name
+            return $voucherHead->ledger_name !== $excludeLedgerName && $voucherHead->ledger_name !== $saleItem->party_ledger_name;
         });
+        
 
         // dd($voucherHeads);
        

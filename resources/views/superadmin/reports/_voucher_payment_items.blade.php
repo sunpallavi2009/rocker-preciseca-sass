@@ -21,13 +21,13 @@
     }
 
 </style>
-@if ($saleReceiptItem)
+{{-- @if ($saleReceiptItem)
     <!-- Code to display data related to $saleReceiptItem -->
 @else
     <div class="alert alert-warning">
         No receipt item found for the selected voucher.
     </div>
-@endif
+@endif --}}
 
 @endsection
 @section("wrapper")
@@ -98,8 +98,18 @@
                                                         <h6>{{ \Carbon\Carbon::parse($voucherItem->voucher_date)->format('j F Y') }}</h6>
                                                     </div>
                                                     <div class="col-lg-3">
-                                                        <p class="mb-0 font-13">Amount</p>
-                                                        <h6 id="VoucherHeadDebitAmount"></h6>
+                                                        <p class="mb-0 font-13"> Amount</p>
+                                                        <h6>
+                                                            @php
+                                                                $filteredVoucherHeads = $voucherHeads->filter(function ($voucherHead) use ($voucherItem) {
+                                                                    return $voucherHead->ledger_name === $voucherItem->party_ledger_name;
+                                                                });
+                                                            @endphp
+
+                                                            @foreach($filteredVoucherHeads as $gstVoucherHead)
+                                                                {{ number_format(abs($gstVoucherHead->amount), 2) }}
+                                                            @endforeach
+                                                        </h6>
                                                     </div>
                                                     <div class="col-lg-3">
                                                         <p class="mb-0 font-13">Pending Amount</p>

@@ -466,10 +466,20 @@ class LedgerController extends Controller
                     $voucherData = $message['VOUCHER'];
                     $partyLedgerName = $voucherData['PARTYLEDGERNAME'] ?? $voucherData['PARTYNAME'] ?? null;
 
-                    // Combine LEDGERENTRIES.LIST and ALLLEDGERENTRIES.LIST
                     $ledgerEntries = $this->normalizeEntries($voucherData['LEDGERENTRIES.LIST'] ?? []);
                     $allLedgerEntries = $this->normalizeEntries($voucherData['ALLLEDGERENTRIES.LIST'] ?? []);
-                    $combinedLedgerEntries = array_merge($ledgerEntries, $allLedgerEntries);
+                    $inventoryEntries = $this->normalizeEntries($voucherData['ALLINVENTORYENTRIES.LIST'] ?? []);
+                    $accountingAllocations = [];
+                    foreach ($inventoryEntries as $inventoryEntry) {
+                        if (isset($inventoryEntry['ACCOUNTINGALLOCATIONS.LIST'])) {
+                            $accountingAllocations = array_merge($accountingAllocations, $this->normalizeEntries($inventoryEntry['ACCOUNTINGALLOCATIONS.LIST']));
+                        }
+                    }
+                    
+                    $combinedLedgerEntries = array_merge($ledgerEntries, $allLedgerEntries, $accountingAllocations);
+
+                    Log::info('accountingAllocations:', ['entries' => $accountingAllocations]);
+
 
                     $inventoryEntries = $this->normalizeEntries($voucherData['ALLINVENTORYENTRIES.LIST'] ?? []);
                     $billAllocations = [];
@@ -570,6 +580,7 @@ class LedgerController extends Controller
                     'amount' => $amount,
                     'entry_type' => $entryType,
                     'ledger_guid' => $ledgerGuid,
+                    'isdeemedpositive' => $entry['ISDEEMEDPOSITIVE'],
                 ];
             } else {
                 Log::error('Missing or invalid LEDGERNAME or AMOUNT in LEDGERENTRIES.LIST entry: ' . json_encode($entry));
@@ -640,6 +651,7 @@ class LedgerController extends Controller
                     'amount' => $entry['amount'],
                     'entry_type' => $entry['entry_type'],
                     'ledger_guid' => $entry['ledger_guid'],
+                    'isdeemedpositive' => $entry['isdeemedpositive'],
                 ]
             );
             $voucherHeadIds[] = [
