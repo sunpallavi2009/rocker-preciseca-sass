@@ -125,6 +125,20 @@ class SalesDataTable extends DataTable
             }
         }
 
+        // Handling search parameters
+        $search = request()->input('search.value');
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('tally_vouchers.party_ledger_name', 'like', "%{$search}%")
+                  ->orWhere('tally_ledgers.parent', 'like', "%{$search}%")
+                  ->orWhere('tally_vouchers.voucher_number', 'like', "%{$search}%")
+                  ->orWhere('tally_vouchers.voucher_date', 'like', "%{$search}%")
+                  ->orWhere('tally_ledgers.gst_in', 'like', "%{$search}%")
+                  ->orWhere('tally_ledgers.phone_no', 'like', "%{$search}%")
+                  ->orWhere('tally_ledgers.email', 'like', "%{$search}%");
+            });
+        }
+
         return $query;
     }
 
