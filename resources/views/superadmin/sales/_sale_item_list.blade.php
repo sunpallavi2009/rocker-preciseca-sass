@@ -100,7 +100,7 @@
                                                             @endphp
 
                                                             @foreach($filteredVoucherHeads as $gstVoucherHead)
-                                                            ₹{{ number_format(abs($gstVoucherHead->amount), 2) }}
+                                                                    ₹{{ number_format(abs($gstVoucherHead->amount), 2) }}
                                                             @endforeach
                                                         </h6>
                                                     </div>

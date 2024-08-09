@@ -78,16 +78,18 @@ class ReportController extends Controller
         $voucherItem = TallyVoucher::findOrFail($voucherItemId);
        
         $voucherItemName = TallyVoucher::where('party_ledger_name', $voucherItem->party_ledger_name)->get();
-        $saleReceiptItem = $voucherItemName->firstWhere('voucher_type', 'Receipt');
+        // $saleReceiptItem = $voucherItemName->firstWhere('voucher_type', 'Receipt');
+
+        $saleReceiptItem = $voucherItemName->filter(function ($item) use ($voucherItem) {
+            return $item->voucher_type !== $voucherItem->voucher_type;
+        })->first();
     
-         // Check if $saleReceiptItem is not null
-         if ($saleReceiptItem) {
+        if ($saleReceiptItem) {
             $voucherHeadsSaleReceipt = TallyVoucherHead::where('tally_voucher_id', $saleReceiptItem->id)
-                ->where('entry_type', 'credit')
+                ->where('ledger_name', $saleReceiptItem->party_ledger_name)
                 ->get();
         } else {
-            // Handle the case where $saleReceiptItem is null
-            $voucherHeadsSaleReceipt = collect(); // Or any default value you prefer
+            $voucherHeadsSaleReceipt = collect(); 
         }
         // dd($voucherHeadsSaleReceipt);
 
@@ -135,7 +137,7 @@ class ReportController extends Controller
         $totalCountLinkHeads = $voucherHeadsSaleReceipt->count();
         $subtotalsamount = $voucherItems->sum('amount');
 
-        $menuItems = TallyVoucher::where('voucher_type', 'Sales')->get();
+        $menuItems = TallyVoucher::all();
 
         return view('superadmin.reports._voucher_items', [
             'voucherItem' => $voucherItem,
