@@ -37,11 +37,14 @@ class SalesDataTable extends DataTable
                 return number_format($entry->round_off_amount ?? 0, 2, '.', '');
             })
             ->addColumn('pending_amount', function ($entry) {
-                $voucherHeads = TallyVoucherHead::where('tally_voucher_id', $entry->id)->get();
+                // $voucherHeads = TallyVoucherHead::where('tally_voucher_id', $entry->id)->get();
+                $pendingVoucherHeads = TallyVoucherHead::where('ledger_name', $entry->party_ledger_name)->get();
+
+
                 $debitAmount = 0;
                 $creditAmount = 0;
             
-                foreach ($voucherHeads as $head) {
+                foreach ($pendingVoucherHeads as $head) {
                     if ($head->entry_type === 'debit') {
                         $debitAmount += $head->amount;
                     } elseif ($head->entry_type === 'credit') {
@@ -204,8 +207,8 @@ class SalesDataTable extends DataTable
             Column::make('overdue_day')->title(__('Overdue By Days'))->addClass('text-center text-danger'),
             Column::make('gst_in')->title(__('GSTIN')),
             Column::make('place_of_supply')->title(__('Place Of Supply')),
-            Column::make('phone_no')->title(__('Phone No')),
-            Column::make('email')->title(__('Email')),
+            Column::make('phone_no')->title(__('Phone No'))->searchable(false),
+            Column::make('email')->title(__('Email'))->searchable(false),
             Column::make('narration')->title(__('Narration')),
         ];
     }

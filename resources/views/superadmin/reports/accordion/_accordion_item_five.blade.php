@@ -1,7 +1,7 @@
 <div class="accordion-item">
     <h2 class="accordion-header" id="headingFive">
         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="true" aria-controls="collapseFive">
-            <i class="bx bx-link fs-4"></i>&nbsp; Linked Document 
+            <i class="bx bx-link fs-4"></i>&nbsp; Linked Document  <p class="" style="margin-left: auto;">{{ $totalCountLinkHeads }} Document</p>
         </button>
     </h2>
     <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#accordionExample">
@@ -25,7 +25,7 @@
                                         <td>{{ \Carbon\Carbon::parse($saleReceiptItem->voucher_date)->format('j F Y') }}</td>
                                         <td>{{ $saleReceiptItem->voucher_number }}</td>
                                         <td>{{ $saleReceiptItem->voucher_type }}</td>
-                                        <td>{{ number_format($voucherHead->amount, 2) }}</td>
+                                        <td>₹{{ number_format(abs($voucherHead->amount), 2) }}</td>
                                     </tr>
                                 @endforeach
                             @else

@@ -733,29 +733,31 @@ class LedgerController extends Controller
     {
         foreach ($voucherHeadIds as $voucherHead) {
             $ledgerName = $voucherHead['ledger_name'];
+            
+            // Check if the ledger name exists in the bank allocations and is an array
             if (isset($bankAllocations[$ledgerName]) && is_array($bankAllocations[$ledgerName])) {
                 foreach ($bankAllocations[$ledgerName] as $bank) {
                     // Sanitize date values
                     $bankDate = $this->sanitizeDate($bank['DATE'] ?? null);
                     $instrumentDate = $this->sanitizeDate($bank['INSTRUMENTDATE'] ?? null);
     
-                    if (isset($bank['BANKNAME'], $bank['AMOUNT'])) {
-                        TallyBankAllocation::updateOrCreate(
-                            [
-                                'head_id' => $voucherHead['id'] ?? null,
-                                'bank_date' => $bankDate,
-                                'instrument_date' => $instrumentDate,
-                                'instrument_number' => $bank['INSTRUMENTNUMBER'] ?? null,
-                                'transaction_type' => $bank['TRANSACTIONTYPE'] ?? null,
-                                'bank_name' => $bank['BANKNAME'] ?? null,
-                                'amount' => $bank['AMOUNT'] ?? null,
-                            ]
-                        );
-                    }
+                    // Insert the record without checking for BANKNAME and AMOUNT
+                    TallyBankAllocation::updateOrCreate(
+                        [
+                            'head_id' => $voucherHead['id'] ?? null,
+                            'bank_date' => $bankDate,
+                            'instrument_date' => $instrumentDate,
+                            'instrument_number' => $bank['INSTRUMENTNUMBER'] ?? null,
+                            'transaction_type' => $bank['TRANSACTIONTYPE'] ?? null,
+                            'bank_name' => $bank['BANKNAME'] ?? null,
+                            'amount' => $bank['AMOUNT'] ?? null,
+                        ]
+                    );
                 }
             }
         }
     }
+    
     
     private function sanitizeDate($date)
     {

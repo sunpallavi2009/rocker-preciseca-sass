@@ -12,6 +12,7 @@ use App\Models\TallyLedger;
 use App\Models\TallyVoucher;
 use App\Models\TallyVoucherHead;
 use App\Models\TallyVoucherItem;
+use App\Models\TallyBankAllocation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log; 
 
@@ -103,6 +104,21 @@ class ReportController extends Controller
         $dueDate = $voucherDate->copy()->addDays($creditPeriod);
         // dd($dueDate);
 
+        $voucherHeadsName = TallyVoucherHead::where('tally_voucher_id', $voucherItemId)->get();
+            $successfulAllocations = [];
+            foreach ($voucherHeadsName as $voucherHead) {
+                $id = $voucherHead->id;
+
+                $bankAllocations = TallyBankAllocation::where('head_id', $id)->get();
+                if ($bankAllocations->isNotEmpty()) {
+                    $successfulAllocations[] = [
+                        'voucher_head' => $voucherHead,
+                        'bank_allocations' => $bankAllocations,
+                    ];
+                }
+            }
+        $pendingVoucherHeads = TallyVoucherHead::where('ledger_name', $voucherItem->party_ledger_name)->get();
+
         
         $voucherHeads = TallyVoucherHead::where('tally_voucher_id', $voucherItemId)->get();
 
@@ -115,6 +131,8 @@ class ReportController extends Controller
         $voucherItems = TallyVoucherItem::where('tally_voucher_id', $voucherItemId)->get();
         $uniqueGstLedgerSources = $voucherItems->pluck('gst_ledger_source')->unique();
         $totalCountItems = TallyVoucherItem::where('tally_voucher_id', $voucherItemId)->count();
+        $totalCountHeads = TallyVoucherHead::where('tally_voucher_id', $voucherItemId)->count();
+        $totalCountLinkHeads = $voucherHeadsSaleReceipt->count();
         $subtotalsamount = $voucherItems->sum('amount');
 
         $menuItems = TallyVoucher::where('voucher_type', 'Sales')->get();
@@ -131,7 +149,11 @@ class ReportController extends Controller
             'voucherHeadsSaleReceipt' => $voucherHeadsSaleReceipt,
             'dueDate' => $dueDate,
             'voucherItemId' => $voucherItemId ,
-            'menuItems' => $menuItems
+            'menuItems' => $menuItems,
+            'pendingVoucherHeads' => $pendingVoucherHeads,
+            'successfulAllocations' => $successfulAllocations,
+            'totalCountHeads' => $totalCountHeads,
+            'totalCountLinkHeads' => $totalCountLinkHeads
         ]);
     }
 
@@ -139,11 +161,8 @@ class ReportController extends Controller
     public function getVoucherItemData($voucherItemId)
     {
         $voucherItem = TallyVoucher::findOrFail($voucherItemId);
-        // dd($saleItem);
         $voucherItemName = $voucherItem->party_ledger_name;
-        // dd($saleItemName);
         $query = TallyVoucherItem::where('tally_voucher_id', $voucherItemId)->get();
-        // dd($query);
         return DataTables::of($query)
             ->addIndexColumn()
             ->editColumn('created_at', function ($request) {
@@ -180,7 +199,32 @@ class ReportController extends Controller
         $creditPeriod = intval($ledgerItem->bill_credit_period ?? 0);
         $voucherDate = \Carbon\Carbon::parse($voucherItem->voucher_date);
         $dueDate = $voucherDate->copy()->addDays($creditPeriod);
+
+        $voucherHeads = TallyVoucherHead::where('tally_voucher_id', $voucherItemId)->get();
+        $gstVoucherHeads = $voucherHeads->filter(function ($voucherHead) use ($voucherItem) {
+            $excludeLedgerName = 'SALES GST INTERSTATE @18%';
+            return $voucherHead->ledger_name !== $excludeLedgerName && $voucherHead->ledger_name !== $voucherItem->party_ledger_name;
+        });
+
+        $voucherHeadsName = TallyVoucherHead::where('tally_voucher_id', $voucherItemId)->get();
+            $successfulAllocations = [];
+            foreach ($voucherHeadsName as $voucherHead) {
+                $id = $voucherHead->id;
+
+                $bankAllocations = TallyBankAllocation::where('head_id', $id)->get();
+                if ($bankAllocations->isNotEmpty()) {
+                    $successfulAllocations[] = [
+                        'voucher_head' => $voucherHead,
+                        'bank_allocations' => $bankAllocations,
+                    ];
+                }
+            }
+            // dd($successfulAllocations);
+
         
+        $pendingVoucherHeads = TallyVoucherHead::where('ledger_name', $voucherItem->party_ledger_name)->get();
+        // dd($voucherHeadsSaleReceipt);
+
         $voucherHeads = TallyVoucherHead::where('tally_voucher_id', $voucherItemId)->get();
         $totalRoundOff = $voucherHeads->filter(function ($head) {
             return $head->ledger_name === 'Round Off';
@@ -192,6 +236,8 @@ class ReportController extends Controller
         $voucherItems = TallyVoucherItem::where('tally_voucher_id', $voucherItemId)->get();
         $uniqueGstLedgerSources = $voucherItems->pluck('gst_ledger_source')->unique();
         $totalCountItems = TallyVoucherItem::where('tally_voucher_id', $voucherItemId)->count();
+        $totalCountHeads = TallyVoucherHead::where('tally_voucher_id', $voucherItemId)->count();
+        $totalCountLinkHeads = $voucherHeadsSaleReceipt->count();
         $subtotalsamount = $voucherItems->sum('amount');
 
         $menuItems = TallyVoucher::where('voucher_type', 'Payment')->get();
@@ -209,7 +255,12 @@ class ReportController extends Controller
             'voucherHeadsSaleReceipt' => $voucherHeadsSaleReceipt,
             'dueDate' => $dueDate,
             'voucherItemId' => $voucherItemId,
-            'menuItems' => $menuItems
+            'menuItems' => $menuItems,
+            'gstVoucherHeads' => $gstVoucherHeads,
+            'pendingVoucherHeads' => $pendingVoucherHeads,
+            'successfulAllocations' => $successfulAllocations,
+            'totalCountHeads' => $totalCountHeads,
+            'totalCountLinkHeads' => $totalCountLinkHeads
         ]);
     }
 
@@ -243,6 +294,26 @@ class ReportController extends Controller
         $creditPeriod = intval($ledgerItem->bill_credit_period ?? 0);
         $voucherDate = \Carbon\Carbon::parse($voucherItem->voucher_date);
         $dueDate = $voucherDate->copy()->addDays($creditPeriod);
+
+
+        $voucherHeadsName = TallyVoucherHead::where('tally_voucher_id', $voucherItemId)->get();
+            $successfulAllocations = [];
+            foreach ($voucherHeadsName as $voucherHead) {
+                $id = $voucherHead->id;
+
+                $bankAllocations = TallyBankAllocation::where('head_id', $id)->get();
+                if ($bankAllocations->isNotEmpty()) {
+                    $successfulAllocations[] = [
+                        'voucher_head' => $voucherHead,
+                        'bank_allocations' => $bankAllocations,
+                    ];
+                }
+            }
+            // dd($successfulAllocations);
+        $pendingVoucherHeads = TallyVoucherHead::where('ledger_name', $voucherItem->party_ledger_name)->get();
+        // dd($pendingVoucherHeads);
+
+
         
         $voucherHeads = TallyVoucherHead::where('tally_voucher_id', $voucherItemId)->get();
         $totalRoundOff = $voucherHeads->filter(function ($head) {
@@ -251,10 +322,12 @@ class ReportController extends Controller
         $totalIGST18 = $voucherHeads->filter(function ($head) {
             return $head->ledger_name === 'IGST @18%';
         })->sum('amount');
-        
+
         $voucherItems = TallyVoucherItem::where('tally_voucher_id', $voucherItemId)->get();
         $uniqueGstLedgerSources = $voucherItems->pluck('gst_ledger_source')->unique();
         $totalCountItems = TallyVoucherItem::where('tally_voucher_id', $voucherItemId)->count();
+        $totalCountHeads = TallyVoucherHead::where('tally_voucher_id', $voucherItemId)->count();
+        $totalCountLinkHeads = $voucherHeadsSaleReceipt->count();
         $subtotalsamount = $voucherItems->sum('amount');
 
         $menuItems = TallyVoucher::where('voucher_type', 'Receipt')->get();
@@ -272,7 +345,11 @@ class ReportController extends Controller
             'voucherHeadsSaleReceipt' => $voucherHeadsSaleReceipt,
             'dueDate' => $dueDate,
             'voucherItemId' => $voucherItemId,
-            'menuItems' => $menuItems
+            'menuItems' => $menuItems,
+            'pendingVoucherHeads' => $pendingVoucherHeads,
+            'successfulAllocations' => $successfulAllocations,
+            'totalCountHeads' => $totalCountHeads,
+            'totalCountLinkHeads' => $totalCountLinkHeads
         ]);
     }
 }

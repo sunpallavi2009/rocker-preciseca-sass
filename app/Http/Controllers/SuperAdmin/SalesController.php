@@ -11,6 +11,7 @@ use App\Models\TallyVoucherHead;
 use App\Models\TallyVoucherItem;
 use App\Models\TallyVoucher;
 use App\Models\TallyLedger;
+use App\Models\TallyBankAllocation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log; 
 use Illuminate\Support\Collection;
@@ -56,26 +57,35 @@ class SalesController extends Controller
         // dd($dueDate);
 
         
+        $voucherHeadsName = TallyVoucherHead::where('tally_voucher_id', $saleItemId)->get();
+            $successfulAllocations = [];
+            foreach ($voucherHeadsName as $voucherHead) {
+                $id = $voucherHead->id;
+
+                $bankAllocations = TallyBankAllocation::where('head_id', $id)->get();
+                if ($bankAllocations->isNotEmpty()) {
+                    $successfulAllocations[] = [
+                        'voucher_head' => $voucherHead,
+                        'bank_allocations' => $bankAllocations,
+                    ];
+                }
+            }
+        $pendingVoucherHeads = TallyVoucherHead::where('ledger_name', $saleItem->party_ledger_name)->get();
+
+
+        
         $voucherHeads = TallyVoucherHead::where('tally_voucher_id', $saleItemId)->get();
-        // $gstVoucherHeads = $voucherHeads->filter(function ($voucherHead) use ($saleItem) {
-        //     return $voucherHead->ledger_name !== $saleItem->party_ledger_name;
-        // });
 
         $gstVoucherHeads = $voucherHeads->filter(function ($voucherHead) use ($saleItem) {
-            // Define the ledger name to exclude
             $excludeLedgerName = 'SALES GST INTERSTATE @18%';
-        
-            // Check if the ledger name is not the one to be excluded and does not match the party ledger name
             return $voucherHead->ledger_name !== $excludeLedgerName && $voucherHead->ledger_name !== $saleItem->party_ledger_name;
         });
-        
-
-        // dd($voucherHeads);
        
-        
         $voucherItems = TallyVoucherItem::where('tally_voucher_id', $saleItemId)->get();
         $uniqueGstLedgerSources = $voucherItems->pluck('gst_ledger_source')->unique();
         $totalCountItems = TallyVoucherItem::where('tally_voucher_id', $saleItemId)->count();
+        $totalCountLinkHeads = $voucherHeadsSaleReceipt->count();
+        $totalCountHeads = TallyVoucherHead::where('tally_voucher_id', $saleItemId)->count();
         $subtotalsamount = $voucherItems->sum('amount');
 
         $menuItems = TallyVoucher::where('voucher_type', 'Sales')->get();
@@ -92,7 +102,10 @@ class SalesController extends Controller
             'voucherHeadsSaleReceipt' => $voucherHeadsSaleReceipt,
             'dueDate' => $dueDate,
             'saleItemId' => $saleItemId ,
-            'menuItems' => $menuItems
+            'menuItems' => $menuItems,
+            'pendingVoucherHeads' => $pendingVoucherHeads,
+            'totalCountLinkHeads' => $totalCountLinkHeads,
+            'totalCountHeads' => $totalCountHeads
         ]);
     }
 

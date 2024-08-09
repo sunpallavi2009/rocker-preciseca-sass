@@ -52,7 +52,7 @@
          <!--start email wrapper-->
          <div class="email-wrapper">
             <div class="email-sidebar">
-                <div class="email-sidebar-header d-grid"> <a href="javascript:;" class="btn btn-primary compose-mail-btn"><i class='bx bx-left-arrow-alt me-2'></i> Voucher Item</a>
+                <div class="email-sidebar-header d-grid"> <a href="javascript:;" class="btn btn-primary compose-mail-btn" onclick="history.back();"><i class='bx bx-left-arrow-alt me-2'></i> Voucher Item</a>
                 </div>
                 <div class="email-sidebar-content">
                     <div class="email-navigation" style="height: 530px;">
@@ -256,7 +256,7 @@
                     });
                     console.log('VoucherHeadDebitAmount:',VoucherHeadDebitAmount);
                     var totalPendingAmount = VoucherHeadCreditAmount + VoucherHeadDebitAmount;
-
+                    console.log('totalPendingAmount:',totalPendingAmount);
                     $('#pendingDue').text(new Intl.NumberFormat('en-IN').format(pendingDue));
                     $('#VoucherHeadDebitAmount').text(new Intl.NumberFormat('en-IN').format(VoucherHeadDebitAmount));
                     $('#totalPendingAmount').text(new Intl.NumberFormat('en-IN').format(gstVoucherHeadAmount));

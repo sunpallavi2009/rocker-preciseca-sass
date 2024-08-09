@@ -1,7 +1,7 @@
 <div class="accordion-item">
     <h2 class="accordion-header" id="headingThree">
         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-           <i class="bx bx-book-open fs-4"></i>&nbsp; Accounting Details <p class="" style="margin-left: auto;">4 A/c's impacted</p>
+           <i class="bx bx-book-open fs-4"></i>&nbsp; Accounting Details <p class="" style="margin-left: auto;">{{ $totalCountHeads }} A/c's impacted</p>
         </button>
     </h2>
     <div id="collapseThree" class="accordion-collapse collapse show" aria-labelledby="headingThree" data-bs-parent="#accordionExample">

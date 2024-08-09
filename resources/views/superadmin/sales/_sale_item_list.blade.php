@@ -10,7 +10,15 @@
         overflow-x: hidden !important; /* Optional, hides horizontal scrollbar */
         border: 1px solid #ddd;
     }
+    .voucher-details {
+        display: flex;
+        flex-direction: column;
+        margin-left: 0.5rem;
+    }
 
+    .voucher-number, .voucher-type {
+        display: block;
+    }
 </style>
 @endsection
 @section("wrapper")
@@ -45,7 +53,10 @@
                             @foreach($menuItems as $item)
                                 <a href="{{ route('sales.items', ['SaleItem' => $item->id]) }}" class="list-group-item d-flex align-items-center {{ request()->route('SaleItem') == $item->id ? 'active' : '' }}" style="border-top: none;">
                                     <i class='bx {{ $item->icon ?? 'bx-default-icon' }} me-3 font-20'></i>
-                                    <span>{{ $item->party_ledger_name }}</span>
+                                    <div class="voucher-details">
+                                        <div class="voucher-number">{{ $item->voucher_number }}</div>
+                                        <div class="voucher-type font-10">{{ $item->voucher_type }} | {{ \Carbon\Carbon::parse($item->voucher_date)->format('j F Y') }}</div>
+                                    </div>
                                     @if(isset($item->badge))
                                         <span class="badge bg-primary rounded-pill ms-auto">{{ $item->badge }}</span>
                                     @endif
@@ -81,7 +92,17 @@
                                                     </div>
                                                     <div class="col-lg-3">
                                                         <p class="mb-0 font-13">Amount</p>
-                                                        <h6 id="totalInvoiceAmount"></h6>
+                                                        <h6>
+                                                            @php
+                                                                $filteredVoucherHeads = $voucherHeads->filter(function ($voucherHead) use ($saleItem) {
+                                                                    return $voucherHead->ledger_name === $saleItem->party_ledger_name;
+                                                                });
+                                                            @endphp
+
+                                                            @foreach($filteredVoucherHeads as $gstVoucherHead)
+                                                            ₹{{ number_format(abs($gstVoucherHead->amount), 2) }}
+                                                            @endforeach
+                                                        </h6>
                                                     </div>
                                                     <div class="col-lg-3">
                                                         <p class="mb-0 font-13">Pending Amount</p>
@@ -96,7 +117,7 @@
                                             <div class="col-lg-3" style="padding: 25px;background: #e7d9d9;border-bottom-right-radius: 15px;border-top-right-radius: 15px;">
                                                 <div class="col-lg-12">
                                                             <p class="mb-0 font-13">Status</p>
-                                                            <h6 class="text-info"><p>{{ $saleItem->voucher_number }}</p></h6>
+                                                            <h6 id="statusText" class=""></h6>
                                                 </div>
                                             </div>
                                         </div>
@@ -108,13 +129,15 @@
                         <div class="col-lg-12 px-2">
                             <div class="col">
                                 <div class="accordion" id="accordionExample">
-
-                                    @include('superadmin.sales._accordion_item_one');
-                                    @include('superadmin.sales._accordion_item_two');
-                                    @include('superadmin.sales._accordion_item_six');
-                                    @include('superadmin.sales._accordion_item_four');
-                                    @include('superadmin.sales._accordion_item_five');
-                                    @include('superadmin.sales._accordion_item_three');
+                                    <input type="hidden" id="totalCreditAmount" value="{{ $pendingVoucherHeads->where('entry_type', 'credit')->sum('amount') }}">
+                                    <input type="hidden" id="totalDebitAmount" value="{{ $pendingVoucherHeads->where('entry_type', 'debit')->sum('amount') }}">
+                                    
+                                    @include('superadmin.sales._accordion_item_one')
+                                    @include('superadmin.sales._accordion_item_two')
+                                    @include('superadmin.sales._accordion_item_six')
+                                    @include('superadmin.sales._accordion_item_four')
+                                    @include('superadmin.sales._accordion_item_five')
+                                    @include('superadmin.sales._accordion_item_three')
                                     
                                 </div>
                             </div>
@@ -137,6 +160,38 @@
 	new PerfectScrollbar('.email-list');
 </script>
 @include('layouts.includes.datatable-js')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get total credit and debit amounts
+        const totalCreditAmount = Math.abs(parseFloat(document.getElementById('totalCreditAmount').value)) || 0;
+        const totalDebitAmount = Math.abs(parseFloat(document.getElementById('totalDebitAmount').value)) || 0;
+        
+        // Calculate total pending amount
+        const totalPendingAmount = totalCreditAmount - totalDebitAmount;
+        const formattedPendingAmount = `₹${Math.abs(totalPendingAmount).toFixed(2)}`;
+        document.getElementById('totalPendingAmount').innerText = formattedPendingAmount;
+
+        // Get the given amount from Blade template
+        const givenAmount = parseFloat(`{{ number_format(abs($gstVoucherHead->amount), 2) }}`.replace(/,/g, ''));
+        
+        console.log('Given Amount:', givenAmount);
+        console.log('Total Pending Amount:', totalPendingAmount);
+
+        // Set status based on totalPendingAmount
+        const statusElement = document.getElementById('statusText');
+
+        if (Math.abs(totalPendingAmount) === 0) {
+            statusElement.innerText = 'PAID';
+            statusElement.style.color = 'green'; // Optional: Set color for PAID status
+        } else if (Math.abs(totalPendingAmount) === givenAmount) {
+            statusElement.innerText = 'UNPAID';
+            statusElement.style.color = 'red'; // Set color for UNPAID status
+        } else {
+            statusElement.innerText = 'PARTIALLY PAID';
+            statusElement.style.color = 'orange'; // Optional: Set color for PARTIALLY PAID status
+        }
+    });
+</script>
 <script>
     $(document).ready(function() {
         $('#sale-item-table').DataTable({
@@ -212,24 +267,7 @@
                     var pendingDue = totalPaymentInvoiceAmount - creditAmount;
 
 
-                    var VoucherHeadCreditAmount = 0;
-                    $('[credit-amount]').each(function() {
-                        var amount = parseFloat($(this).attr('credit-amount')) || 0;
-                        VoucherHeadCreditAmount += amount;
-                    });
-                    console.log('VoucherHeadCreditAmount:',VoucherHeadCreditAmount);
-
-                    var VoucherHeadDebitAmount = 0;
-                    $('[debit-amount]').each(function() {
-                        var amount = parseFloat($(this).attr('debit-amount')) || 0;
-                        VoucherHeadDebitAmount += amount;
-                    });
-                    console.log('VoucherHeadDebitAmount:',VoucherHeadDebitAmount);
-                    var totalPendingAmount = VoucherHeadCreditAmount + VoucherHeadDebitAmount;
-
-
                     $('#pendingDue').text(new Intl.NumberFormat('en-IN').format(pendingDue));
-                    $('#totalPendingAmount').text(new Intl.NumberFormat('en-IN').format(totalPendingAmount));
                 }
         });
     });

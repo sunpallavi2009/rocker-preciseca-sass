@@ -52,7 +52,7 @@
          <!--start email wrapper-->
          <div class="email-wrapper">
             <div class="email-sidebar">
-                <div class="email-sidebar-header d-grid"> <a href="javascript:;" class="btn btn-primary compose-mail-btn"><i class='bx bx-left-arrow-alt me-2'></i> Voucher Item</a>
+                <div class="email-sidebar-header d-grid"> <a href="javascript:;" class="btn btn-primary compose-mail-btn" onclick="history.back();"><i class='bx bx-left-arrow-alt me-2'></i> Voucher Item</a>
                 </div>
                 <div class="email-sidebar-content">
                     <div class="email-navigation" style="height: 530px;">
@@ -77,7 +77,7 @@
             <div class="email-header d-xl-flex align-items-center padding-0" style="height: auto;">
                 <div class="d-flex align-items-center">
                     <div class="">
-                        <h4 class="my-1 text-info">{{ $voucherItem->party_ledger_name }} </h4>
+                        <h4 class="my-1 text-info">{{ $voucherItem->party_ledger_name }}  | {{ $voucherItem->voucher_type }}</h4>
                     </div>
                 </div>
             </div>
@@ -91,19 +91,19 @@
                                 <div class="card radius-10 border-start border-0 border-4 border-info">
                                     <div class="card-body">
                                         <div class="row p-2">
-                                            <div class="col-lg-9" style="padding: 25px;background: #eee;border-bottom-left-radius: 15px;border-top-left-radius: 15px;">
+                                            <div class="col-lg-10" style="padding: 25px;background: #eee;border-bottom-left-radius: 15px;border-top-left-radius: 15px;">
                                                 <div class="row">
-                                                    <div class="col-lg-3">
+                                                    <div class="col-lg-2">
                                                         <p class="mb-0 font-13">Issued Date</p>
                                                         <h6>{{ \Carbon\Carbon::parse($voucherItem->voucher_date)->format('j F Y') }}</h6>
                                                     </div>
-                                                    <div class="col-lg-3">
-                                                        <p class="mb-0 font-13">Amount</p>
+                                                    <div class="col-lg-2">
+                                                        <p class="mb-0 font-13"> Amount</p>
                                                         <h6>
                                                             @php
-                                                            $filteredVoucherHeads = $voucherHeads->filter(function ($voucherHead) use ($voucherItem) {
-                                                                return $voucherHead->ledger_name === $voucherItem->party_ledger_name;
-                                                            });
+                                                                $filteredVoucherHeads = $voucherHeads->filter(function ($voucherHead) use ($voucherItem) {
+                                                                    return $voucherHead->ledger_name === $voucherItem->party_ledger_name;
+                                                                });
                                                             @endphp
 
                                                             @foreach($filteredVoucherHeads as $gstVoucherHead)
@@ -111,20 +111,28 @@
                                                             @endforeach
                                                         </h6>
                                                     </div>
-                                                    <div class="col-lg-3">
+                                                    <div class="col-lg-2">
                                                         <p class="mb-0 font-13">Pending Amount</p>
                                                         <h6 id="totalPendingAmount"></h6>
                                                     </div>
-                                                    <div class="col-lg-3">
-                                                        <p class="mb-0 font-13">Due Date</p>
-                                                        <h6>{{ \Carbon\Carbon::parse($dueDate)->format('j F Y') }}</h6>
-                                                    </div>
+                                                    @foreach($successfulAllocations as $allocation)
+                                                            @foreach($allocation['bank_allocations'] as $bankAllocation)
+                                                                    <div class="col-lg-3">
+                                                                        <p class="mb-0 font-13">Mode of payment</p>
+                                                                        <h6>{{ $bankAllocation->transaction_type }}</h6>
+                                                                    </div>
+                                                                    <div class="col-lg-3">
+                                                                        <p class="mb-0 font-13">Account</p>
+                                                                        <h6>{{ $allocation['voucher_head']->ledger_name }}</h6>
+                                                                    </div>
+                                                            @endforeach
+                                                    @endforeach
                                                 </div>
                                             </div>
-                                            <div class="col-lg-3" style="padding: 25px;background: #e7d9d9;border-bottom-right-radius: 15px;border-top-right-radius: 15px;">
+                                            <div class="col-lg-2" style="padding: 25px;background: #e7d9d9;border-bottom-right-radius: 15px;border-top-right-radius: 15px;">
                                                 <div class="col-lg-12">
                                                             <p class="mb-0 font-13">Status</p>
-                                                            <h6 class="text-info">Status</h6>
+                                                            <h6 id="statusText" class="text-info"></h6>
                                                 </div>
                                             </div>
                                         </div>
@@ -136,13 +144,15 @@
                         <div class="col-lg-12 px-2">
                             <div class="col">
                                 <div class="accordion" id="accordionExample">
-
-                                    @include('superadmin.reports.accordion._accordion_item_one');
-                                    @include('superadmin.reports.accordion._accordion_item_two');
-                                    @include('superadmin.reports.accordion._accordion_item_six');
-                                    @include('superadmin.reports.accordion._accordion_item_four');
-                                    @include('superadmin.reports.accordion._accordion_item_five');
-                                    @include('superadmin.reports.accordion._accordion_item_three');
+                                    <input type="hidden" id="totalCreditAmount" value="{{ $pendingVoucherHeads->where('entry_type', 'credit')->sum('amount') }}">
+                                    <input type="hidden" id="totalDebitAmount" value="{{ $pendingVoucherHeads->where('entry_type', 'debit')->sum('amount') }}">
+                                    @include('superadmin.reports.accordion._accordion_item_one')
+                                    @include('superadmin.reports.accordion._accordion_item_two')
+                                    @include('superadmin.reports.accordion._accordion_item_seven')
+                                    {{-- @include('superadmin.reports.accordion._accordion_item_six') --}}
+                                    @include('superadmin.reports.accordion._accordion_item_four')
+                                    @include('superadmin.reports.accordion._accordion_item_five')
+                                    @include('superadmin.reports.accordion._accordion_item_three')
                                     
                                 </div>
                             </div>
@@ -165,6 +175,38 @@
 	new PerfectScrollbar('.email-list');
 </script>
 @include('layouts.includes.datatable-js')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+       console.log('Script running...'); // To check if the script is running
+   
+       // Get the values for credit and debit amounts and apply Math.abs to get the absolute value
+       const totalCreditAmount = Math.abs(parseFloat(document.getElementById('totalCreditAmount').value)) || 0;
+       const totalDebitAmount = Math.abs(parseFloat(document.getElementById('totalDebitAmount').value)) || 0;
+       
+       // Calculate the total pending amount
+       const totalPendingAmount = totalCreditAmount - totalDebitAmount;
+   
+       // Format the pending amount with rupee sign
+       const formattedPendingAmount = `₹${Math.abs(totalPendingAmount).toFixed(2)}`;
+       
+       // Display the formatted total pending amount
+       document.getElementById('totalPendingAmount').innerText = formattedPendingAmount;
+   
+       // Determine and display the status
+       const statusElement = document.getElementById('statusText'); // Use the ID selector
+       if (totalPendingAmount === 0) {
+           statusElement.innerText = 'Settled';
+       } else {
+           statusElement.innerText = 'Partially Settled';
+       }
+   
+       console.log('Total Pending Amount:', totalPendingAmount); // Debugging info
+       console.log('Status Text:', statusElement.innerText); // Debugging info
+   });
+   
+   
+   </script>
+   
 <script>
     $(document).ready(function() {
         $('#sale-item-table').DataTable({
@@ -238,12 +280,7 @@
                     var totalPaymentInvoiceAmount = parseFloat($('#totalPaymentInvoiceAmount').text().replace(/[\₹,]/g, '')) || 0;
                     var pendingDue = totalPaymentInvoiceAmount - creditAmount;
 
-
-
-                    var totalPendingAmount = ((roundOff + igst18) - pendingDue);
-
                     $('#pendingDue').text(new Intl.NumberFormat('en-IN').format(pendingDue));
-                    $('#totalPendingAmount').text(new Intl.NumberFormat('en-IN').format(totalPendingAmount));
                 }
         });
     });
